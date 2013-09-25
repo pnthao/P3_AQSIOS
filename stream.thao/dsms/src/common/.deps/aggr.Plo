@@ -1,0 +1,6 @@
+aggr.lo: aggr.cc ../../../dsms/include/common/aggr.h \
+ ../../../dsms/include/common/types.h
+
+../../../dsms/include/common/aggr.h:
+
+../../../dsms/include/common/types.h:

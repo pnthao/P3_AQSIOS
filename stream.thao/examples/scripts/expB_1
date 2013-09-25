@@ -1,0 +1,83 @@
+#
+# Example Script 1: 
+#
+
+# 
+# Register the stream S with 4 attributes
+#
+
+table : register stream temp (location char(50), Degrees integer);
+
+#
+# The location of the stream.  When you actually run the script make sure
+# that the relative path of the source is valid.
+#
+
+source : data/mytemp.dat
+
+
+table : register stream wind (location char(50), direction integer, windSpeed integer);
+source : data/mywind.dat
+
+#
+# The query over S and R
+#
+
+query: select w.location, AVG(windSpeed), AVG(direction),AVG(Degrees) from wind [now] as w, temp [Range 10 Seconds] where w.location = temp.location Group By w.location;
+
+
+#
+# The file where the output of the query is written to
+#
+#class: 2
+dest : exps/expB_1query1.qo
+
+#
+# A different query ...
+#
+
+query: select location, AVG(windSpeed) from wind [Range 10 Seconds] group by location; 
+#class: 2
+dest: exps/expB_1query2.qo
+
+query: select location, AVG(Degrees) from temp [Range 10 Seconds] group by location;
+#class: 2
+dest: exps/expB_1query3.qo
+
+query: select location, Degrees from temp where Degrees > 23 AND Degrees < 25;
+#class: 2
+dest: exps/expB_1query4.qo
+
+query: select location, Degrees from temp where Degrees > 25;
+#class: 2
+dest: exps/expB_1query5.qo
+
+query: select location, Degrees from temp where Degrees < 50;
+#class: 2
+dest: exps/expB_1query6.qo
+
+#query: select w.location, MAX(windSpeed), MAX(direction), MAX(Degrees) from wind [Range 10 seconds] as w, temp [Range 10 Seconds] where w.location = temp.location Group By w.location;
+
+#backup query for failed query
+query: select AVG(direction) from wind [Range 10 seconds];
+#class: 2
+dest: exps/expB_1query7.qo
+
+query: select w.location, windSpeed, direction, Degrees from wind [Now] as w, temp [Range 10 Seconds] where w.location = temp.location;
+#class: 2
+dest: exps/expB_1query8.qo
+
+query: select MIN(Degrees) from temp [Range 10 Seconds];
+#class: 2
+dest: exps/expB_1query9.qo
+
+query: select MAX(windSpeed) from wind [Range 10 Seconds];
+#class: 2
+dest: exps/expB_1query10.qo
+
+
+
+
+
+
+

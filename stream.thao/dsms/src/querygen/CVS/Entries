@@ -1,0 +1,20 @@
+D/.deps////
+D/.libs////
+/Makefile/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/Makefile.am/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/Makefile.in/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/libquerygen.la/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/log_naive_plan_gen.cc/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/log_naive_plan_gen.lo/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/log_plan_gen.cc/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/log_plan_gen.lo/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/logexpr.cc/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/logexpr.lo/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/logop.cc/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/logop.lo/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/logop_debug.cc/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/logop_debug.lo/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/query_debug.cc/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/query_debug.lo/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/sem_interp.cc/1.1.1.1/Tue Oct 14 21:37:06 2008//
+/sem_interp.lo/1.1.1.1/Tue Oct 14 21:37:06 2008//

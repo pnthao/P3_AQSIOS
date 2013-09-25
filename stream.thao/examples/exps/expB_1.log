@@ -1,0 +1,48 @@
+
+Optimizing plan
+
+Memory Manager: started with 8193 pages of size 4096
+Operator [45] Time = 0.00200282 Lot = 0
+Operator [43] Time = 0.000314616 Lot = 58
+Operator [42] Time = 0.000273984 Lot = 58
+Operator [41] Time = 0.00198581 Lot = 0
+Operator [39] Time = 0.00030071 Lot = 58
+Operator [38] Time = 0.000262066 Lot = 58
+Operator [37] Time = 0.00352683 Lot = 0
+Operator [33] Time = 0.000541128 Lot = 58
+Operator [32] Time = 0.000268386 Lot = 58
+Operator [31] Time = 0.000262828 Lot = 58
+Operator [30] Time = 0.00227943 Lot = 0
+Operator [28] Time = 0.000276578 Lot = 58
+Operator [27] Time = 0.000261658 Lot = 58
+Operator [26] Time = 0.00062995 Lot = 0
+Operator [24] Time = 0.0002939 Lot = 58
+Operator [23] Time = 0.000632798 Lot = 0
+Operator [21] Time = 0.000274722 Lot = 58
+Operator [20] Time = 0.000257566 Lot = 0
+Operator [18] Time = 0.00029666 Lot = 58
+Operator [17] Time = 0.00228355 Lot = 0
+Operator [15] Time = 0.000326798 Lot = 58
+Operator [14] Time = 0.000261988 Lot = 58
+Operator [13] Time = 0.0022672 Lot = 0
+Operator [11] Time = 0.00032606 Lot = 58
+Operator [10] Time = 0.000262246 Lot = 58
+Operator [9] Time = 0.00689173 Lot = 0
+Operator [7] Time = 0.00047138 Lot = 58
+Operator [5] Time = 0.00052615 Lot = 58
+Operator [4] Time = 0.000262794 Lot = 58
+Operator [3] Time = 0.000297784 Lot = 58
+Operator [2] Time = 0.000310032 Lot = 58
+Operator [1] Time = 0.000323022 Lot = 58
+Operator [0] Time = 0.00051821 Lot = 0
+Total Time: 0.0302714
+Store [0]: <1,1>
+Store [1]: <1,1>
+Store [2]: <2,2>
+Store [3]: <1,1>
+Store [4]: <2,2>
+Store [5]: <2,2>
+Store [6]: <4,4>
+Store [7]: <3,3>
+Store [8]: <1,1>
+Store [9]: <1,1>

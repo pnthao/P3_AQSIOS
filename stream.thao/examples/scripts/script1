@@ -1,0 +1,40 @@
+#
+# Example Script 1: 
+#
+
+# 
+# Register the stream S with 4 attributes
+#
+
+table : register stream S (A integer, B float, C byte, D char(4));
+
+#
+# The location of the stream.  When you actually run the script make sure
+# that the relative path of the source is valid.
+#
+
+source : examples/data/S.dat
+
+#
+# The query over S
+#
+
+query : select * from S;
+
+#
+# The file where the output of the query is written to
+#
+
+dest : qout1
+
+#
+# A different query ...
+#
+
+query : select * from S where A = 5;
+
+#
+# ... whose output goes to the file
+
+dest : qout2
+

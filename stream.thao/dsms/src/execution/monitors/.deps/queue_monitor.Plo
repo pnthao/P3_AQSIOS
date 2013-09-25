@@ -1,0 +1,13 @@
+queue_monitor.lo: queue_monitor.cc \
+ ../../../../dsms/include/execution/monitors/queue_monitor.h \
+ ../../../../dsms/include/execution/monitors/property_monitor.h \
+ ../../../../dsms/include/common/types.h \
+ ../../../../dsms/include/execution/monitors/property.h
+
+../../../../dsms/include/execution/monitors/queue_monitor.h:
+
+../../../../dsms/include/execution/monitors/property_monitor.h:
+
+../../../../dsms/include/common/types.h:
+
+../../../../dsms/include/execution/monitors/property.h:

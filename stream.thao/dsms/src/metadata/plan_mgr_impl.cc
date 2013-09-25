@@ -1,0 +1,1045 @@
+#ifndef _PLAN_MGR_IMPL_
+#include "metadata/plan_mgr_impl.h"
+#endif
+
+#ifndef _DEBUG_
+#include "common/debug.h"
+#endif
+
+#ifndef _OP_MONITOR_
+#include "execution/monitors/op_monitor.h"
+#endif
+
+#ifndef _STORE_MONITOR_
+#include "execution/monitors/store_monitor.h"
+#endif
+
+#ifndef _PROPERTY_
+#include "execution/monitors/property.h"
+#endif
+
+#ifndef _SYS_STREAM_
+#include "common/sys_stream.h"
+#endif
+
+#ifndef _STREAM_SOURCE_
+#include "execution/operators/stream_source.h"
+#endif
+
+#include <stdio.h>
+using namespace Metadata;
+using namespace Physical;
+using namespace std;
+
+PlanManagerImpl::PlanManagerImpl(TableManager *tableMgr, ostream& _LOG)
+	: LOG (_LOG)
+{
+	ASSERT (tableMgr);
+	
+	this -> tableMgr = tableMgr;
+	this -> freeOps = 0;
+	this -> usedOps = 0;
+	this -> numQueues = 0;
+	this -> numSyns = 0;
+	this -> numStores = 0;
+	this -> numIndexes = 0;
+	this -> numExprs = 0;
+	this -> numBExprs = 0;
+	this -> numBaseTables = 0;
+	this -> numOutputs = 0;
+	this -> numTables = 0;
+	this -> numQueries = 0;
+	this -> memMgr = 0;
+	this -> staticTupleAlloc = 0;
+	
+	// Organize all the ops as a linked list
+	init_ops ();
+	
+	//Query Class Scheduling by Lory Al Moakar
+	this->current_query_class = 1;
+	//end of part 1 of Query Class Scheduling by LAM
+
+#ifdef _SYS_STR_
+	// Create the operator that produces system stream (SS)
+	createSSGen ();
+#endif
+}
+
+void PlanManagerImpl::createSSGen ()
+{
+	Operator *op;
+	
+	op = new_op (PO_SS_GEN);
+	ASSERT (op);
+	
+	// Schema of SysStream
+	op -> numAttrs = SS_NUM_ATTRS;
+	for (unsigned int a = 0 ; a < SS_NUM_ATTRS ; a++) {
+		op -> attrTypes [a] = SS_ATTR_TYPES [a];
+		op -> attrLen [a] = SS_ATTR_LEN [a];
+	}
+	
+	op -> bStream = true;
+	op -> store = 0;
+	op -> outQueue = 0;
+	
+	op -> u.SS_GEN.numOutput = 0;
+	
+	//Query Class Scheduling by Lory Al Moakar
+	// assign the stream generator operator a high query class 
+	// --> class 1
+	op -> query_class_id = 1;
+	//end of part 2 of Query Class Scheduling by LAM
+
+	//SSGen should be active?
+	op->b_active = true;
+
+	// Register the mapping from SysStream -> op
+	ASSERT (numTables < MAX_TABLES);
+	sourceOps [numTables].tableId = SS_ID;
+	sourceOps [numTables].opId = op -> id;
+	numTables ++;	
+}
+
+PlanManagerImpl::~PlanManagerImpl() {
+	if (memMgr)
+		delete memMgr;
+
+	if (staticTupleAlloc)
+		delete staticTupleAlloc;
+	
+	// free ops
+	Operator *op = usedOps;
+	while (op) {
+		if (op -> instOp)
+			delete (op -> instOp);
+		op = op -> next;
+	}
+	
+	// free queues
+	for (unsigned int q = 0 ; q < numQueues ; q++)
+		if (queues[q].instQueue)
+			delete queues[q].instQueue;
+
+	for (unsigned int s = 0 ; s < numStores ; s++)
+		if (stores [s].instStore)
+			delete stores[s].instStore;
+	
+	for (unsigned int i = 0 ; i < numIndexes ; i++)
+		delete indexes[i];
+
+	for (unsigned int s = 0 ; s < numSyns ; s++) {
+		switch (syns[s].kind) {
+		case REL_SYN:
+			if (syns[s].u.relSyn)
+				delete syns[s].u.relSyn;
+			break;
+			
+		case WIN_SYN:
+			if (syns[s].u.winSyn)
+				delete syns[s].u.winSyn;
+			break;
+			
+		case PARTN_WIN_SYN:
+			if (syns[s].u.pwinSyn)
+				delete syns[s].u.pwinSyn;
+			break;
+			
+		case LIN_SYN:
+			if (syns[s].u.linSyn)
+				delete syns[s].u.linSyn;
+			break;
+			
+		default:
+			break;
+		}
+
+	}
+	
+}
+
+/**
+ * Create a new operator which acts as the operator-source for this
+ * table.  Every plan that uses this base table involves this operator. 
+ */ 
+
+int PlanManagerImpl::addBaseTable(unsigned int tableId,
+								  Interface::TableSource *source)
+{
+	Operator *op;	
+	
+	// The base table is a stream:
+	if(tableMgr -> isStream(tableId)) {
+		
+		// Get a new stream source operator
+		op = new_op (PO_STREAM_SOURCE);
+		
+		// We ran out of resources!
+		if (!op) {
+			LOG << "PlanManager: out of space for operators" << endl;
+			return -1;
+		}
+		
+		op -> store = 0;
+		op -> instOp = 0;
+		op -> u.STREAM_SOURCE.strId = tableId;
+		op -> u.STREAM_SOURCE.srcId = numBaseTables;		
+		op -> bStream = true;
+	}
+	
+	// base table is a relation	
+	else {
+		
+		// new relation source operator
+		op = new_op (PO_RELN_SOURCE);
+		
+		// We ran out of resources!
+		if (!op) {
+			LOG << "PlanManager: out of space for operators" << endl;
+			return -1;
+		}
+		
+		op -> store = 0;
+		op -> instOp = 0;
+		op -> u.RELN_SOURCE.relId = tableId;
+		op -> u.RELN_SOURCE.outSyn = 0;
+		op -> u.RELN_SOURCE.srcId = numBaseTables;
+		op -> bStream = false;
+	}
+	
+	// Output schema of the operator = schema of the stream
+	op -> numAttrs = tableMgr -> getNumAttrs (tableId);
+	
+	if (op -> numAttrs > MAX_ATTRS) {
+		LOG << "PlanManager: too many attributes in the table" << endl;
+		return -1;
+	}
+	
+	for (unsigned int a = 0 ; a < op -> numAttrs ; a++) {
+		op -> attrTypes [a] = tableMgr -> getAttrType (tableId, a);		
+		op -> attrLen [a] = tableMgr -> getAttrLen (tableId, a);
+	}
+	
+	// Store the tableSource
+	if (numBaseTables >= MAX_TABLES) {
+		LOG << "PlanManager: out of space for base tables" << endl;
+		return -1;
+	}
+	baseTableSources [numBaseTables ++] = source;
+
+#ifdef _DM_
+	// Have we seen this guy before?
+	for (unsigned int t = 0 ; t < numTables ; t++) 
+		ASSERT (sourceOps [t].tableId != tableId);
+#endif	
+	
+	// Store the fact that "op" is the source operator for tableId
+	if(numTables >= MAX_TABLES) {
+		LOG << "PlanManager: out of space for tables" << endl;
+		return -1;
+	}
+	sourceOps [numTables].tableId = tableId;
+	sourceOps [numTables].opId = op -> id;
+	numTables ++;
+	
+	return 0;	
+}
+
+//Query Class Scheduling by Lory Al Moakar
+int PlanManagerImpl::addQueryClasses ( Physical::Operator * phyOp) {
+ 
+  //is this an operator that is not shared or is shared with a 
+  //lower priority class ? --> assign it the higher priority
+  if ( phyOp-> query_class_id == 0 || 
+       phyOp-> query_class_id > current_query_class)
+    phyOp-> query_class_id = current_query_class;
+  //we already assigned this operator a higher query class
+  //--> we also assigned its input --> return success
+  else 
+    return 0;
+  int rc = 0;
+  //if no more inputs to scan return 0
+  if ( phyOp->numInputs <= 0 )
+    return 0; 
+  
+  //printf("%d \n",phyOp->query_class_id);
+  
+  for ( int i = 0; i < phyOp->numInputs ; i ++ ) {
+   	
+   
+    rc = addQueryClasses( phyOp->inputs[i]);
+     
+    if ( rc != 0 ) 
+      return rc;
+  }
+  return 0;
+}
+
+//end of part 3 of Query Class Scheduling by LAM
+
+//query placement by Thao Pham
+void PlanManagerImpl::setActive(Physical::Operator* phyOp){
+
+	phyOp->b_active = true;
+	//activate also the inputs of PhyOp
+
+	for(int i=0;i<phyOp->numInputs;i++)
+		if(!phyOp->inputs[i]->b_active) setActive(phyOp->inputs[i]);
+
+}
+
+//end of query placement by Thao Pham
+
+int PlanManagerImpl::addLogicalQueryPlan (unsigned int queryId,
+										  Logical::Operator *logPlan,
+										  Interface::QueryOutput *output)
+{
+	int rc;
+	Physical::Operator *phyPlan, *rootOp;
+	Physical::Operator *outputOp;
+	Physical::Operator *querySource;
+	
+	// generate the physical plan for the query
+	if ((rc = genPhysicalPlan (logPlan, phyPlan)) != 0)
+		return rc;
+
+	// root operator for the plan
+	rootOp = phyPlan;
+
+	// Generate  a query-source  operator  for this  query.  Query  source
+	// operator  is a no-op  operator that  sits on  top of  queries.  any
+	// other query that  uses the result of this query  reads off from the
+	// query source operator.  This is  a dummy operator found only at the
+	// metadata  level.    When  we  instantiate   the  actual  executable
+	// operators, we  bypass this dummy operator.   This operator prevents
+	// certain incorrect optimizations  (e.g., pushing selections from one
+	// query to another) from happening.   
+	if ((rc = mk_qry_src (phyPlan, querySource)) != 0)
+		return rc;
+	
+	// Store the <queryId, querySrc> pair - this is used if the queryId is
+	// an  intermediate query  whose results  are used  by  other queries.
+	// Then we can "attach" the base of other queries to this operator.	
+	if (numQueries >= MAX_QUERIES) {
+		LOG << "PlanManagerImpl:: too many queries" << endl;
+		return -1;
+	}
+	
+	queryOutOps [numQueries].queryId = queryId;
+	queryOutOps [numQueries].opId = querySource -> id;
+	numQueries ++;
+	
+	// If the the output of this query is required externally (parameter
+	// output is not null), we need to create a specific operator that
+	// interfaces outside the system.
+	if (output) {
+		if (numOutputs >= MAX_OUTPUT) {
+			LOG << "PlanManagerImpl:: too many outputs" << endl;
+			return -1;
+		}
+		
+		// Create an output operator that reads from the query
+		if ((rc = mk_output (phyPlan, outputOp)) != 0)
+			return rc;
+		
+		queryOutputs [numOutputs] = output;		
+		outputOp -> u.OUTPUT.outputId = numOutputs;
+		outputOp -> u.OUTPUT.queryId = queryId;
+		numOutputs ++;
+		
+		//moved inside by Thao Pham, it might not correct to put it outside in the case of virtual query
+	
+		//Query Class Scheduling by Lory Al Moakar
+		//attach the query class id to operators of this query
+		
+		addQueryClasses ( outputOp );
+		
+		//end of part 4 of Query Class Scheduling by LAM
+		
+		//end of "moved inside by Thao Pham"
+		//query placement by Thao Pham
+		if(b_active){
+			setActive(outputOp);
+			printf("ACTIVE!!!!\n");
+		}
+		//end of query placement by Thao Pham
+	}
+	
+	
+	return 0;
+}
+
+int PlanManagerImpl::getQuerySchema (unsigned int queryId,
+									 char *schemaBuf,
+									 unsigned int schemaBufLen)
+{
+	bool outOpFound;
+	unsigned int outOpId;
+	Operator *op;
+	
+	if (!schemaBuf)
+		return -1;
+	
+	// Get the operator that outputs the result of the query
+	outOpFound = false;
+	for (unsigned int q = 0 ; (q < numQueries) && !outOpFound ; q++) {
+		if (queryOutOps [q].queryId == queryId) {
+			outOpId = queryOutOps[q].opId;
+			outOpFound = true;
+		}
+	}
+	
+	// Hmm... I don't know about the this query?
+	if (!outOpFound) {
+		return -1;
+	}
+	op = (ops + outOpId);
+	
+	char *ptr = schemaBuf;
+	unsigned int nused;
+	
+	// Encode: <schema ...>
+	const char *typeStr = (op -> bStream)? "stream" : "relation";
+	nused = snprintf (ptr, schemaBufLen,
+					  "<schema query =\"%d\" type = \"%s\">\n",
+					  queryId, typeStr);
+	if (nused == schemaBufLen - 1)
+		return -1;
+	schemaBufLen -= nused;
+	ptr += nused;
+	
+	// Encode the columns
+	for (unsigned int a = 0 ; a < op -> numAttrs ; a++) {
+		switch (op -> attrTypes [a]) {
+		case INT:
+			
+			nused = snprintf (ptr, schemaBufLen,
+							  "<column type = \"int\"/>\n");
+			if (nused == schemaBufLen - 1)
+				return -1;
+			schemaBufLen -= nused;
+			ptr += nused;
+			break;
+			
+		case FLOAT:
+			
+			nused = snprintf (ptr, schemaBufLen,
+							  "<column type = \"float\"/>\n");
+			if (nused == schemaBufLen - 1)
+				return -1;
+			schemaBufLen -= nused;
+			ptr += nused;
+			break;
+						
+		case CHAR:
+
+			nused = snprintf (ptr, schemaBufLen,
+							  "<column type = \"char\" len = \"%d\"/>\n",
+							  op -> attrLen [a]);
+			if (nused == schemaBufLen - 1)
+				return -1;
+			schemaBufLen -= nused;
+			ptr += nused;
+			break;
+						
+		case BYTE:
+
+			nused = snprintf (ptr, schemaBufLen,
+							  "<column type = \"byte\"/>\n");
+			if (nused == schemaBufLen - 1)
+				return -1;
+			schemaBufLen -= nused;
+			ptr += nused;
+			break;
+			
+		default:
+			return -1;
+		}
+	}
+
+	nused = snprintf (ptr, schemaBufLen, "</schema>\n");
+	if (nused == schemaBufLen - 1)
+		return -1;
+	
+	return 0;
+}
+
+int PlanManagerImpl::map (unsigned int queryId, unsigned int tableId)
+{
+	Operator *queryOutOp;
+	
+	// Get the output operator for the query
+	queryOutOp = 0;	
+	for (unsigned int q = 0 ; q < numQueries ; q++) {
+		if (queryOutOps [q].queryId == queryId) {
+			queryOutOp = ops + queryOutOps [q].opId;						
+			break;
+		}
+	}
+
+	// We did not find an outut operator for this query. (this should
+	// never happen during correct execution
+	if (!queryOutOp)
+		return -1;
+   	
+	// We want to make sure that the schema of the table and the query are
+	// identical.
+	
+	if (tableMgr -> getNumAttrs (tableId) != queryOutOp -> numAttrs)				
+		return -1;
+	
+	for (unsigned int a = 0 ; a < queryOutOp -> numAttrs ; a++) {
+		
+		if (tableMgr -> getAttrType (tableId, a) !=
+			queryOutOp -> attrTypes [a]) {
+			return -1;
+		}
+		
+		if (tableMgr -> getAttrLen (tableId, a) !=
+			queryOutOp -> attrLen [a]) {
+			LOG << "Reg len: " << tableMgr -> getAttrLen (tableId, a)
+				<< endl;
+			LOG << "Qry len: " << queryOutOp -> attrLen [a]
+				<< endl;
+			
+			return -1;
+		}
+	}
+	
+	if (numTables >= MAX_TABLES) {
+		LOG << "PlanManagerImpl:: too many sources" << endl;
+		return -1;
+	}		
+	
+	sourceOps [numTables].tableId = tableId;
+	sourceOps [numTables].opId = queryOutOp -> id;
+	numTables ++;
+	
+	return 0;
+}
+
+/**
+ * [[ To be implemented ]]
+ */
+int PlanManagerImpl::optimize_plan ()
+{
+	int rc;
+	
+	LOG << endl << "Optimizing plan" << endl << endl;
+	
+	// remove all query sources
+	if((rc = removeQuerySources()) != 0)
+		return rc;
+	
+	if ((rc = addSinks ()) != 0)
+		return rc;
+
+	//LOG << endl << endl;
+	//printPlan();
+	
+	if ((rc = mergeSelects ()) != 0)
+		return rc;
+
+	//LOG << endl << endl;
+	//printPlan();
+	//Operator Sharing By Lory Al Moakar
+
+	findSharedOps(); 
+	
+
+#ifdef _DM_
+	LOG << endl << endl;
+	LOG << "-------------------------------------------------------" << endl;
+	LOG << "-----------AFTER FINDING SHARED OPERATORS--------------" << endl;
+	LOG << "-------------------------------------------------------" << endl;
+
+	//printPlan();
+#endif
+	//end of part 1 of operator sharing by LAM
+	
+	if ((rc = mergeProjectsToJoin()) != 0)
+		return rc;
+
+
+	//end of inserting inactive drop operator, by Thao Pham
+
+
+#ifdef _DM_
+	//LOG << endl << endl;
+	printPlan();
+#endif	
+	return 0;
+}
+
+/**
+ * This method is called after the optimize_plan() method.
+ * This adds all the auxiliary (non-operator) structures lik
+ * synopses, stores, queues to the plan.
+ */ 
+int PlanManagerImpl::add_aux_structures ()
+{
+	int rc;   
+	
+	if ((rc = addIntAggrs ()) != 0)
+		return rc;
+	
+	if ((rc = add_syn ()) != 0)
+		return rc;
+	
+	if ((rc = add_store ()) != 0)
+		return rc;	
+	
+	if ((rc = add_queues ()) != 0)
+		return rc;
+	
+	if ((rc = set_in_stores ()) != 0)
+		return rc;
+	
+#ifdef _DM_
+	LOG << endl << endl;
+	printPlan();
+#endif
+	
+	return 0;
+}
+
+
+/**
+ * [[ To be implemented ]]
+ */
+
+int PlanManagerImpl::instantiate ()
+{
+	int rc;
+	
+	if ((rc = inst_mem_mgr ()) != 0)
+		return rc;	
+	
+	
+	if ((rc = inst_static_tuple_alloc ()) != 0)
+		return rc;
+	
+	if ((rc = inst_ops ()) != 0)
+		return rc;
+	
+	if ((rc = inst_queues ()) != 0)
+		return rc;
+	
+	if ((rc = link_syn_store ()) != 0)
+		return rc;
+	
+	if ((rc = link_in_stores ()) != 0)
+		return rc;
+
+	// instantiate system stream generator: first we need to locate
+	// the ss_gen Physical::Operator
+	Operator *ss_gen;
+	ss_gen = usedOps;
+	while (ss_gen) {
+		if (ss_gen -> kind == PO_SS_GEN) 
+			break;
+		ss_gen = ss_gen -> next;
+	}
+	
+	if (!ss_gen) {
+		LOG << "PlanManager: SysStream Gen operator not found" << endl;
+		return -1;
+	}
+	
+	if ((rc = inst_ss_gen (ss_gen)) != 0)
+		return rc;
+	
+	return 0;
+}
+
+int PlanManagerImpl::initScheduler (Execution::Scheduler *sched)
+{
+	int rc;
+
+	//HR implementation by Lory Al Moakar
+	//call copyInpOutputs() method in order to copy the 
+	//query plan from the physical to the execution operators
+	
+        if ((rc = copyInpOutputs()) != 0)
+	  return rc;
+	
+	fprintf(stdout, "before addop");
+	//end of part 1 of HR implementation by LAM
+	
+	Operator *op;
+
+	op = usedOps;
+	
+	/*modify by Thao Pham:
+	 *  add the operator to the scheduling list by the same order as that when 
+	 * creating the operator (from bottom to top of the tree)
+	 */ 
+
+	//go to the tail, which is the first op created (the source)
+	if(!op) return 0;
+	
+	while (op->next)
+	{
+		op = op->next;
+	}
+	
+	while (op)
+	{
+		//printf("\n%d\n", op->kind);
+		
+		ASSERT(op->instOp);
+		//Query Class Scheduling by Lory Al Moakar
+		//copy the query_class_id from the physical operator
+		// to the execution operator
+		// since these ids will be used to index the 
+		// query priority array --> start at 0 
+		// subtract 1 from the ids since the physical ids
+		// start at 1
+		op -> instOp -> query_class_id = op -> query_class_id - 1;
+		
+		//end of part 5  of Query Class Scheduling by LAM
+
+		//query placement by Thao Pham, pass the activate info from PhyOp to ExecOp
+		op->instOp->b_active = op->b_active;
+
+		//end of query placement by Thao Pham
+
+		if ((rc = sched -> addOperator (op -> instOp)) != 0)
+			return rc;
+		op = op->prev;	
+
+	}	
+	
+/*while (op) {
+
+		ASSERT (op -> instOp);
+		
+		if ((rc = sched -> addOperator (op -> instOp)) != 0)
+			return rc;
+		
+		op = op -> next;
+	}*/
+	//end of modifying by Thao Pham
+	return 0;
+}
+//load manager initializaion, by Thao Pham
+int PlanManagerImpl::initLoadManager(Execution::LoadManager **loadMgrs)
+{
+	
+	//Execution::LoadManager ** loadMgrs = sched->loadMgrs;
+	//loadMgr->setQueryPlan(usedOps);
+	Physical::Operator *op ;
+	op = usedOps;
+	int rc;
+	
+	while(op)
+	{
+		//printf("\n%d\n", op->instOp->query_class_id);
+		if((rc=loadMgrs [op->instOp->query_class_id]->addOperator(op))!=0)
+			return rc;
+		if(op->kind == PO_DROP){
+			if((rc=loadMgrs [op->instOp->query_class_id]->addDropOperator(op))!=0)
+				return rc;
+			//add the list of related inputs and outputs for each drop
+			if((rc = loadMgrs[op->instOp->query_class_id]->findRelatedInputs_Drop(op))!=0)
+				return rc;
+			
+			if((rc = loadMgrs[op->instOp->query_class_id]->findRelatedOutputs_Drop(op))!=0)
+				return rc;
+		}
+		if (((op->kind) == PO_STREAM_SOURCE) || (op->instOp->isShedder ==true) ){
+			if((rc=loadMgrs[op->instOp->query_class_id]->addSourceOperator(op))!=0)
+				return rc;
+			
+		}		
+
+		if (op->kind == PO_OUTPUT){
+			if((rc=loadMgrs[op->instOp->query_class_id] -> addOutputOperator(op))!=0)
+				return rc;
+				
+		}
+		op = op->next;
+	}
+	/*for(int i=0;i<3; i++)
+	{	for(int k=0;k< loadMgrs[i]->numOps; k++)
+			printf("   %d", loadMgrs[i]->ops[k]->id);
+		printf("\n");
+	}
+	sleep(2000000000);*/
+	return 0;
+}
+//end of load manager initialization, by Thao Pham
+//load all input data to simulate the case the input tuples are read from main memory
+//load all input data into memory buffer before starting execution and timing
+int PlanManagerImpl::loadAllInputs()
+{
+		Physical::Operator *op ;
+		op = usedOps;
+		int rc;
+
+		while(op)
+		{
+			if(op->kind == PO_STREAM_SOURCE)
+			{
+				if((rc=((Execution::StreamSource*)op->instOp)->loadAllInput())!=0)
+					return rc;
+			}
+			op = op->next;
+		}
+		return 0;
+
+}
+
+//HR implementation by Lory Al Moakar
+	   
+/**
+ * this method traverses the operator list
+ * and copies the inputs and the outputs of each 
+ * operator from the physical plan to the execution 
+ * plan. This is important since the operators need to have
+ * an idea about the plan in order to calculate their mean
+ * selectivity and mean cost.
+ * we also use this method in order to initialize the 
+ * operator_ids. I do this here because of efficiency
+ * definitely not for semantics!!
+ * @return               0 (success), !0 (failure)
+ */
+int PlanManagerImpl::copyInpOutputs() 
+{
+  int rc;
+  Operator *op;
+  
+  op = usedOps;
+  
+  //used to assign unique operator IDs to the operators
+  // we need this because in HR the join operator needs
+  // to inform its inputs of the other input's selectivity
+  // and input rate --> it needs to distinguish between
+  // its inputs
+  int opid = 0;
+
+  while (op) {
+    
+    ASSERT (op -> instOp);
+
+    op->instOp -> numOutputs = op->numOutputs;
+    op->instOp -> numInputs = op->numInputs;
+    
+    for ( int i =0; i < op->numOutputs; i++ ){
+      op->instOp->outputs[i] = op->outputs[i]->instOp;
+    }
+    
+    for ( int i =0; i< op->numInputs; i++ ){
+      op->instOp->inputs[i] = op->inputs[i]->instOp;
+    }
+    
+    op->instOp->operator_id = opid;
+    opid++;
+
+    op = op -> next;
+    
+  }//end of while loop
+  
+  return 0;
+}
+//end of part 2 of HR implementation by LAM
+
+#ifdef _DM_;
+#include <iostream>
+#include "metadata/phy_op_debug.h"
+
+void PlanManagerImpl::printPlan()
+{
+	LOG << "PrintPlan: begin" << endl;
+	Operator *op = usedOps;
+
+	LOG <<
+		"---------------------------- OPERATORS -----------------------"
+		<< endl;
+	
+	while (op) {
+		LOG << "Op: " << op -> id << endl;
+		LOG << op << endl;
+
+		//Query Class Scheduling by Lory Al Moakar
+		//added to display in the log file the query_class_id of the operator
+		LOG << "Query class: " << op->query_class_id << "\n"<<endl;
+		//end of part 6 Query Class Scheduling by LAM
+
+		op = op -> next;
+	}
+
+	LOG << "PrintPlan: after ops" << endl;
+	
+	LOG <<
+		"---------------------------- SYNOPSES -----------------------"
+		<< endl;
+	
+	for (unsigned int s = 0 ; s < numSyns ; s++)
+		LOG << syns + s << endl;
+	
+	LOG <<
+		"---------------------------- STORES -----------------------"
+		<< endl;
+	
+	for (unsigned int s = 0 ; s < numStores ; s++)
+		LOG << stores + s << endl;	
+
+	LOG << "PrintPlan: end" << endl;
+	return;
+}
+#endif
+
+int PlanManagerImpl::printStat ()
+{
+	int rc;
+	
+#ifdef _MONITOR_
+
+	// Operator times
+	Operator *op = usedOps;
+	double timeTaken;
+	int lastOutTs;
+	double total = 0;
+	
+	while (op) {
+
+		ASSERT (op -> instOp);
+		if ((rc = op -> instOp -> getDoubleProperty (Monitor::OP_TIME_USED,
+													 timeTaken)) != 0)
+			return rc;
+
+		if ((rc = op -> instOp -> getIntProperty (Monitor::OP_LAST_OUT_TS,
+												  lastOutTs)) != 0)
+			return rc;
+		
+		total += timeTaken;
+		LOG << "Operator [" << op -> id << "]"
+			<< " Time = " 
+			<< timeTaken
+			<< " Lot = "
+			<< lastOutTs
+			<< endl;
+		
+		op = op -> next;
+	}
+	
+	LOG << "Total Time: " << total << endl;
+	
+	// Store memories
+	int maxPages, numPages;
+	for (unsigned int s = 0 ; s < numStores ; s++) {
+		ASSERT (stores [s].instStore);
+		if ((rc = stores [s].instStore ->
+			 getIntProperty (Monitor::STORE_MAX_PAGES, maxPages)) != 0)
+			return rc;
+		
+		if ((rc = stores [s].instStore ->
+			 getIntProperty (Monitor::STORE_NUM_PAGES, numPages)) != 0)
+			return rc;
+		
+		
+		LOG << "Store [" << s << "]: <"
+			<< maxPages
+			<< ","
+			<< numPages
+			<< ">";
+		
+		LOG << endl;
+	}
+
+#if 0	
+	int numEntries, numBuckets, numNonMt;
+	for (unsigned int i = 0 ; i < numIndexes ; i++) {
+
+		if ((rc = indexes [i] -> getIntProperty 
+			 (Monitor::HINDEX_NUM_BUCKETS, numBuckets)) != 0)
+			return rc;
+		if ((rc = indexes [i] -> getIntProperty
+			 (Monitor::HINDEX_NUM_NONMT_BUCKETS, numNonMt)) != 0)
+			return rc;
+		if ((rc = indexes [i] -> getIntProperty
+			 (Monitor::HINDEX_NUM_ENTRIES, numEntries)) != 0)
+			return rc;
+
+		LOG << "Index [" << i << "]: <"
+			<< numBuckets
+			<< ","
+			<< numNonMt
+			<< ","
+			<< numEntries
+			<< ">"
+			<< endl;
+	}	
+	
+	// Synopsis sizez
+	int maxTuples, numTuples;	
+	for (unsigned int s = 0 ; s < numSyns ; s++) {
+
+		switch (syns[s].kind) {
+		case REL_SYN:
+			ASSERT (syns [s].u.relSyn);
+			rc = syns [s].u.relSyn ->
+				getIntProperty (Monitor::SYN_MAX_TUPLES, maxTuples);
+			if (rc != 0) return rc;
+			
+			rc = syns [s].u.relSyn ->
+				getIntProperty (Monitor::SYN_NUM_TUPLES, numTuples);
+			if (rc != 0) return rc;			
+			
+			break;
+			
+		case WIN_SYN:
+			ASSERT (syns [s].u.winSyn);
+			rc = syns [s].u.winSyn ->
+				getIntProperty (Monitor::SYN_MAX_TUPLES, maxTuples);
+			if (rc != 0) return rc;
+			
+			rc = syns [s].u.winSyn ->
+				getIntProperty (Monitor::SYN_NUM_TUPLES, numTuples);
+			if (rc != 0) return rc;
+			break;
+			
+		case LIN_SYN:
+			ASSERT (syns [s].u.linSyn);
+			rc = syns [s].u.linSyn ->
+				getIntProperty (Monitor::SYN_MAX_TUPLES, maxTuples);
+			if (rc != 0) return rc;
+			
+			rc = syns [s].u.linSyn ->
+				getIntProperty (Monitor::SYN_NUM_TUPLES, numTuples);
+			if (rc != 0) return rc;
+			break;
+			
+		case PARTN_WIN_SYN:
+			ASSERT (syns [s].u.pwinSyn);
+			rc = syns [s].u.pwinSyn ->
+				getIntProperty (Monitor::SYN_MAX_TUPLES, maxTuples);
+			if (rc != 0) return rc;
+			
+			rc = syns [s].u.pwinSyn ->
+				getIntProperty (Monitor::SYN_NUM_TUPLES, numTuples);
+			if (rc != 0) return rc;
+			break;
+			
+		default:
+			ASSERT (0);
+			break;
+		}
+
+		LOG << "Synopsis [" << s << "]: <"
+			<< maxTuples
+			<< ","
+			<< numTuples
+			<< ">"
+			;
+		
+		LOG << endl;					
+	}
+#endif
+
+	
+#endif
+	
+	return 0;
+}

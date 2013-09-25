@@ -1,0 +1,10 @@
+/Makefile/1.1.1.1/Tue Oct 14 21:37:02 2008//
+/Makefile.am/1.1.1.1/Tue Oct 14 21:37:02 2008//
+/Makefile.in/1.1.1.1/Tue Oct 14 21:37:02 2008//
+D/common////
+D/execution////
+D/interface////
+D/metadata////
+D/parser////
+D/querygen////
+D/server////

@@ -1,0 +1,106 @@
+
+Optimizing plan
+
+
+
+-------------------------------------------------------
+-----------AFTER FINDING SHARED OPERATORS--------------
+-------------------------------------------------------
+PrintPlan: begin
+---------------------------- OPERATORS -----------------------
+Op: 6
+6. Output: 
+Output: Stream
+Schema: <Int, Float, Byte, Char(4)>
+Input: 4
+Store: (null)
+
+Op: 4
+4. Select: 
+Output: Stream
+Schema: <Int, Float, Byte, Char(4)>
+Input: 1
+Store: (null)
+Predicate: ([0,0] == 5)
+
+Op: 3
+3. Output: 
+Output: Stream
+Schema: <Int, Float, Byte, Char(4)>
+Input: 1
+Store: (null)
+
+Op: 1
+1. StreamSource: 
+Output: Stream
+Schema: <Int, Float, Byte, Char(4)>
+Input: 
+Store: (null)
+
+Op: 0
+0. SSGen: 
+Output: Stream
+Schema: <Int, Int, Int, Int, Float>
+Input: 
+Store: (null)
+
+PrintPlan: after ops
+---------------------------- SYNOPSES -----------------------
+---------------------------- STORES -----------------------
+PrintPlan: end
+
+
+PrintPlan: begin
+---------------------------- OPERATORS -----------------------
+Op: 6
+6. Output: 
+Output: Stream
+Schema: <Int, Float, Byte, Char(4)>
+Input: 4
+Store: (null)
+
+Op: 4
+4. Select: 
+Output: Stream
+Schema: <Int, Float, Byte, Char(4)>
+Input: 1
+Store: (null)
+Predicate: ([0,0] == 5)
+
+Op: 3
+3. Output: 
+Output: Stream
+Schema: <Int, Float, Byte, Char(4)>
+Input: 1
+Store: (null)
+
+Op: 1
+1. StreamSource: 
+Output: Stream
+Schema: <Int, Float, Byte, Char(4)>
+Input: 
+Store: 0
+
+Op: 0
+0. SSGen: 
+Output: Stream
+Schema: <Int, Int, Int, Int, Float>
+Input: 
+Store: (null)
+
+PrintPlan: after ops
+---------------------------- SYNOPSES -----------------------
+---------------------------- STORES -----------------------
+0. Simple Store: 
+Owner: 1
+Stubs: 
+
+PrintPlan: end
+Memory Manager: started with 8193 pages of size 4096
+Operator [6] Time = 1e-06 Lot = 0
+Operator [4] Time = 1e-06 Lot = 9
+Operator [3] Time = 2e-06 Lot = 0
+Operator [1] Time = 3e-06 Lot = 9
+Operator [0] Time = 1e-06 Lot = 0
+Total Time: 8e-06
+Store [0]: <1,1>

@@ -1,0 +1,4 @@
+property_monitor.lo: property_monitor.cc \
+ ../../../../dsms/include/execution/monitors/property_monitor.h
+
+../../../../dsms/include/execution/monitors/property_monitor.h:

@@ -1,0 +1,34 @@
+#
+# Example Script 1: 
+#
+
+# 
+# Register the stream S with 4 attributes
+#
+
+table : register stream temp (location char(50), Degrees integer);
+
+#
+# The location of the stream.  When you actually run the script make sure
+# that the relative path of the source is valid.
+#
+
+source : data/mytemp.dat
+
+
+table : register stream wind (location char(50), direction integer, windSpeed integer);
+source : data/mywind.dat
+
+
+query: select w.location, windSpeed, direction, Degrees from wind [Now] as w, temp [Range 10 Seconds] where w.location = temp.location;
+#class: 2
+dest: exps/expB_5query8.qo
+
+query: select location from temp;
+dest: exps/expB_5query9.qo
+
+
+
+
+
+

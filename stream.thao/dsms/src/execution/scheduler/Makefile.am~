@@ -1,0 +1,7 @@
+
+INCLUDES = -I$(top_srcdir)/dsms/include
+
+noinst_LTLIBRARIES = libsched.la
+
+libsched_la_SOURCES = round_robin.cc lottery_scheduler.cc lottery_sched_id.cc HR_scheduler.cc QC_scheduler.cc QCHR_scheduler.cc weighted_round_robin.cc
+

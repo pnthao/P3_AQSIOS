@@ -1,0 +1,27 @@
+eval_context.lo: eval_context.cc \
+ ../../../../dsms/include/execution/internals/eval_context.h \
+ ../../../../dsms/include/execution/internals/tuple.h \
+ ../../../../dsms/include/common/debug.h /usr/include/assert.h \
+ /usr/include/features.h /usr/include/bits/predefs.h \
+ /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
+ /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
+
+../../../../dsms/include/execution/internals/eval_context.h:
+
+../../../../dsms/include/execution/internals/tuple.h:
+
+../../../../dsms/include/common/debug.h:
+
+/usr/include/assert.h:
+
+/usr/include/features.h:
+
+/usr/include/bits/predefs.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/bits/wordsize.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/gnu/stubs-32.h:

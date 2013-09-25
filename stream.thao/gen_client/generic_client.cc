@@ -1,0 +1,547 @@
+/**
+ * @file       generic_client.cc
+ * @date       May 22, 2004
+ * @brief      Generic test client for the STREAM server. 
+ */
+
+#include <iostream>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "script_file_reader.h"
+#include "file_source.h"
+#include "gen_output.h"
+#include "interface/server.h"
+#include "interface/error.h"
+
+using namespace std;
+using namespace Client;
+
+static const unsigned int MAX_TABLE_SPEC = 1024;//256;
+static char tableSpecBuf [MAX_TABLE_SPEC + 1];
+static unsigned int tableSpecLen;
+
+static const unsigned int MAX_QUERY = 1024;//512;
+static char query [MAX_QUERY + 1];
+static unsigned int queryLen;
+
+static const int MAX_OUTPUT = 5000;//100;
+static fstream queryOutput [MAX_OUTPUT];
+static int numOutput;
+
+static const unsigned int MAX_SOURCES = 500;//50;
+static FileSource *sources [MAX_SOURCES];
+static unsigned int numSources;
+
+static GenOutput *outputs [MAX_OUTPUT];
+
+static ofstream logStr;
+
+/**
+ *  Error codes used by handle_error:
+ */
+static const int ERR_INCORRECT_USAGE            = -1001;
+static const int ERR_UNABLE_TO_START_SERVER     = -1002;
+static const int ERR_CONFIG_FILE                = -1003;
+static const int TOO_MANY_OPS                   = -1654;
+static const int LOTT_FAILED                    = -1655;
+static const int GOING_BACK_IN_TIME             = -1656; 
+static const int TICKET_MULTIPLIER_NEGATIVE     = -1711;
+static const int NO_OPERATOR_CAN_EXECUTE        = -1712;
+static const int SCHEDULER_UNRECOGNIZED         = -1713;
+static const int ERR_READING_SCRIPT_FILE        = -10;
+
+/**
+ * Handle errors: print the error code & exit.
+ */
+static void handle_error(int rc) 
+{
+	cerr << endl << "Error: ";
+	
+	if(rc == ERR_INCORRECT_USAGE) 
+		cerr << "Incorrect Usage";
+	else if(rc == ERR_UNABLE_TO_START_SERVER)
+		cerr << "Unable to start the server";
+	else if ( rc == ERR_CONFIG_FILE ) 
+	  cerr << "ConfigFileReader: Unknown Parameter. Check log for line no";
+	else if ( rc == TOO_MANY_OPS )
+	  cerr << "Too many operators: increase MAXOPS";
+	else if ( rc == LOTT_FAILED )
+	  cerr << "Lottery scheduler unable to find ticket";
+	else if ( rc == GOING_BACK_IN_TIME )
+	  cerr << "Clock error!! System going back in time ";
+	else if ( rc == PARSE_ERR ) 
+	  cerr << "Error while parsing query or table";
+	
+	/// Duplicate table name
+	else if (rc ==  DUPLICATE_TABLE_ERR)
+	  cerr <<"Duplicate table name";
+	
+	/// Duplicate attr. in the table
+	else if ( rc == DUPLICATE_ATTR_ERR )
+	  cerr <<"Duplicate attr. in the table";
+
+	/// Unknown table (non-registered table) in a query
+	else if ( rc == UNKNOWN_TABLE_ERR) 
+	  cerr << "Unknown table (non-registered table) in a query";
+	
+	/// Unknown variable in query
+	else if ( rc ==  UNKNOWN_VAR_ERR ) 
+	  cerr << "Unknown variable in query";
+
+	/// Ambiguous attribute
+	else if ( rc ==  AMBIGUOUS_ATTR_ERR) 
+	  cerr << "Ambiguous attribute";
+
+	/// Unknown attribute
+	else if ( rc == UNKNOWN_ATTR_ERR ) 
+	  cerr << "Unknown attribute";
+
+	/// Window over relation err
+	else if ( rc ==  WINDOW_OVER_REL_ERR ) 
+	  cerr << "Window over relation err";
+
+	/// Operations over incompatible types
+	else if ( rc == TYPE_ERR) 
+	  cerr << "Operations over incompatible types";
+	
+	else if ( rc == SCHEMA_MISMATCH_ERR) 
+	  cerr << "SCHEMA_MISMATCH_ERR";
+
+	else if ( rc == AMBIGUOUS_TABLE_ERR) 
+	  cerr << "AMBIGUOUS_TABLE_ERR";   
+	
+	else if ( rc == TICKET_MULTIPLIER_NEGATIVE  ) 
+	  cerr << "Multiplier that determines tickets is negative";
+	//this error is thrown by HR_scheduler when none of the operators
+	// is ready to execute
+	else if ( rc == NO_OPERATOR_CAN_EXECUTE ) {
+	  cerr << "Inside HR scheduler, no operator has anything to execute";
+	  cerr << " END OF INPUT has been reached";
+	}
+	else if ( rc == SCHEDULER_UNRECOGNIZED ) 
+	  cerr << "No scheduler exists for this code. Check params.h for valid values";
+	else if ( rc == ERR_READING_SCRIPT_FILE ) 
+	  cerr <<"Error in reading script file";
+	else 
+		cerr << "Unknown error: " << rc;
+	
+	cerr << endl;
+	
+	exit(1);
+}
+
+/**
+ * Start a new instance of the server
+ */
+static int start_server(Server *& server) 
+{
+	server = Server::newServer(logStr);
+	
+	if(!server)
+		return ERR_UNABLE_TO_START_SERVER;
+	
+	return 0;
+}
+
+
+/**
+ * Register an application with the server
+ */
+static int register_appln (Server       *server, 
+						   const char   *applnScriptFile) 
+{
+	int rc;
+	
+	ScriptFileReader           *scriptReader;
+	ScriptFileReader::Command   command;
+	unsigned int                queryId;
+	bool                        bQueryValid;
+	bool                        bQueryIdValid;
+	bool                        bTableSpecValid;
+	FileSource                 *source;
+	GenOutput                  *output;
+
+	// Reader to interpret the script file
+	scriptReader = new ScriptFileReader(applnScriptFile);
+	
+	// Get the server ready for the barge of commands
+	if((rc = server -> beginAppSpecification()) != 0)
+		return rc;	
+	
+	bQueryIdValid = false;
+	bTableSpecValid = false;
+	bQueryValid = false;
+	numOutput = 0;
+	numSources = 0;
+
+	
+	// Process all commands
+	while (true) {
+		
+		if ((rc = scriptReader -> getNextCommand(command)) != 0)
+			return rc;
+		
+		// No more commands
+		if(!command.desc) 
+			break;		
+		
+		switch (command.type) {
+			
+		case ScriptFileReader::TABLE:
+			
+			// Copy the table specification to my local state
+			tableSpecLen = command.len;			
+			if (tableSpecLen > MAX_TABLE_SPEC)
+				return -1;			
+			strncpy (tableSpecBuf, command.desc, tableSpecLen+1);
+			bTableSpecValid = true;
+			
+			break;
+			
+		case ScriptFileReader::SOURCE:
+			
+			// Previous command should have been a table specification. 
+			if (!bTableSpecValid)
+				return -1;
+			
+			// Create a source for this table
+			if (numSources >= MAX_SOURCES)
+				return -1;
+			
+			source = sources[numSources++] = new FileSource (command.desc);
+			
+			// register the table
+			if((rc = server -> registerBaseTable(tableSpecBuf,
+												 tableSpecLen,
+												 source)) != 0) {
+				cout << "Error registering base table" << endl;
+				return rc;
+			}
+				
+			// Reset the table specification buffer
+			bTableSpecValid = false;
+			
+			break;
+			
+		case ScriptFileReader::QUERY:
+
+			queryLen = command.len;
+			if (queryLen > MAX_QUERY)
+				return -1;
+			
+			strncpy (query, command.desc, queryLen+1);
+			bQueryValid = true;
+			break;
+
+		case ScriptFileReader::DEST:
+
+			if (!bQueryValid)
+				return -1;
+			
+			if (numOutput >= MAX_OUTPUT)
+				return -1;
+
+			queryOutput[numOutput].open (command.desc, std::ios_base::out);
+			
+			// Create a generic query output
+			output = outputs[numOutput] =
+				new GenOutput (queryOutput[numOutput]);
+			numOutput++;
+			
+			// Register the query
+			if((rc = server -> registerQuery(query,
+											 queryLen,
+											 output,
+											 queryId)) != 0){
+				cout << "Error registering query" << endl;
+				cout << "Query: " << command.desc << endl;
+				return rc;
+			}
+			
+			bQueryValid = false;
+			
+			break;
+
+       		//Query Class Scheduling by Lory Al Moakar
+		// recognize the query class command and pass to the server 
+		case ScriptFileReader:: QCLASS:
+		  server -> current_query_class =  atoi(command.desc);
+		  cout<< "Current class " << server -> current_query_class<<endl;
+		  break;
+       		//end of Query Class Scheduling by LAM   
+			
+			
+		case ScriptFileReader::VQUERY:			
+			
+			// Register query
+			if ((rc = server -> registerQuery (command.desc,
+											   command.len,
+											   0,
+											   queryId)) != 0) {
+				cout << "Error registering query" << endl;
+				cout << "Query: " << command.desc << endl;
+				return rc;
+			}
+
+			bQueryIdValid = true;
+			
+			break;
+			
+		case ScriptFileReader::VTABLE:
+			
+			if (!bQueryIdValid)
+				return -1;
+			
+			if ((rc = server -> registerView (queryId,
+											  command.desc,
+											  command.len)) != 0) {
+				cout << "Error registering view" << endl;
+				cout << "View: " << command.desc << endl;
+				return rc;
+			}
+			
+			bQueryIdValid = false;
+			break;
+			
+		default:
+			
+			// unknown command type
+			return -1;
+		}			
+	}
+
+	if (bQueryValid || bQueryIdValid || bTableSpecValid)
+		return -1;
+	
+	if((rc = server -> endAppSpecification()) != 0)
+		return rc;
+
+	delete scriptReader;
+	
+	return 0;
+}
+
+/**
+ * Start executing the server.
+ */
+static int start_execution(Server *server)
+{
+	return server -> beginExecution();
+}
+
+void closeOutputFiles ()
+{
+	for (int o = 0 ; o < numOutput ; o++)
+		queryOutput[o].close();
+}
+
+static const char *opt_string = "l:c:s:";
+
+extern char *optarg;
+extern int optind;
+static int getOpts (int argc,
+					char *argv[],
+					char *&logFile, char *&configFile,
+					char *&scriptFile)
+{
+	int c;
+	
+	logFile = configFile = scriptFile = 0;
+	while ((c = getopt (argc, argv, opt_string)) != -1) {
+		
+		if (c == 'l') {
+
+			if (logFile) {
+				cout << "Usage: "
+					 << argv [0]
+					 << " -l[logFile] -c[configFile] [scriptFile]"
+					 << endl;
+				return -1;				
+			}
+			
+			logFile = strdup (optarg);
+		}
+		else if (c == 'c') {
+			if (configFile) {
+				cout << "Usage: "
+					 << argv [0]
+					 << " -l[logFile] -c[configFile] [scriptFile]"
+					 << endl;
+				return -1;
+			}
+			
+			configFile = strdup (optarg);
+		}
+		
+		else {			
+ 			cout << "Usage: "
+				 << argv [0]
+				 << " -l[logFile] -c[configFile] [scriptFile]"
+				 << endl;
+			
+			return -1;
+		}
+	}
+
+	if (!logFile || !configFile) {
+		cout << "Usage: "
+			 << argv [0]
+			 << " -l[logFile] -c[configFile] [scriptFile]"
+			 << endl;
+		return -1;
+	}	
+	
+	if (optind != argc - 1) {
+		cout << "Usage: "
+			 << argv [0]
+			 << " -l[logFile] -c[configFile] [scriptFile]"
+			 << endl;
+		return -1;
+	}		
+	
+	scriptFile = strdup (argv [optind]);
+	
+	return 0;
+}
+
+//by Thao Pham: another parameter reader that reads also the location of the load managing log file
+// and the 3 parameters p1, p2, p3 to run the sensitivity analysis
+
+static int getOpts (int argc,
+					char *argv[],
+					char *&logFile, char *&configFile,
+					char *&scriptFile, char *&sheddingLogFile)
+{
+	int c;
+	
+	logFile = configFile = scriptFile = sheddingLogFile = 0;
+	while ((c = getopt (argc, argv, opt_string)) != -1) {
+		if (c == 'l') {
+
+			if (logFile) {
+				cout << "Usage: "
+					 << argv [0]
+					 << " -l[logFile] -c[configFile] -s[sheddingLogFile] [scriptFile]"
+					 << endl;
+				return -1;				
+			}
+			
+			logFile = strdup (optarg);
+		}
+		else if (c == 'c') {
+			if (configFile) {
+				cout << "Usage: "
+					 << argv [0]
+					 << " -l[logFile] -c[configFile] -s[sheddingLogFile] [scriptFile]"
+					 << endl;
+				return -1;
+			}
+			
+			configFile = strdup (optarg);
+		}
+		else if (c =='s')
+		{
+			if(sheddingLogFile){
+				cout << "Usage: "
+					 << argv[0]
+					 << "-l[logFile] -c[configFile] -s[sheddingLogFile] [scriptFile]"
+					 <<endl;
+					 return -1;
+			}
+			sheddingLogFile = strdup (optarg);
+		}
+		else {			
+ 			cout << "Usage: "
+				 << argv [0]
+				 << " -l[logFile] -c[configFile] -s[sheddingLogFile] [scriptFile]"
+				 << endl;
+			
+			return -1;
+		}
+	}
+
+	if (!logFile || !configFile) {
+		cout << "Usage: "
+			 << argv [0]
+			 << " -l[logFile] -c[configFile] -s[sheddingLogFile] [scriptFile]"
+			 << endl;
+		return -1;
+		
+		//note: the sheddingLogFile is optional, no log will be written if the file is not given 
+	}	
+	
+	if (optind != argc - 1) {
+		cout << "Usage: "
+			 << argv [0]
+			 << " -l[logFile] -c[configFile] -s[sheddingLogFile] [scriptFile]"
+			 << endl;
+		return -1;
+	}		
+	
+	scriptFile = strdup (argv [optind]);
+	
+	return 0;
+}
+
+//end of param reader for load managing by Thao Pham
+
+
+int main(int argc, char *argv[])
+{	
+	cpu_set_t  mask;
+	CPU_ZERO(&mask);
+	CPU_SET(1, &mask);
+
+	sched_setaffinity(0, sizeof(mask), &mask);
+	Server     *server;
+	char       *applnScriptFile;
+	char       *configFile;
+	char       *logFile;
+	char	   *sheddingLogFile;
+	int         rc;
+	
+	// Options
+	if ((rc = getOpts (argc, argv,
+					   logFile, configFile,
+					   applnScriptFile,sheddingLogFile)) != 0)
+		return 1;
+
+	// Log file
+	logStr.open (logFile, ofstream::out);
+	
+	// Fire up the server 
+	if((rc = start_server (server)) != 0)  
+		handle_error (rc);
+
+	// Register the config file
+	if ((rc = server -> setConfigFile (configFile)) != 0)
+		handle_error (rc);
+	
+	//register the load shedding log file
+	if((rc = server ->setSheddingLogFile(sheddingLogFile))!=0)
+		handle_error (rc);
+	
+	// Register application
+	if((rc = register_appln (server, applnScriptFile)) != 0)
+		handle_error (rc);
+	
+	// Start execution
+	if((rc = start_execution (server)) != 0)
+		handle_error (rc);
+	
+	// Close all the files
+	closeOutputFiles ();
+	
+	free(logFile);
+	free(configFile);
+	free(applnScriptFile);
+
+	delete server;
+	for (int s = 0 ; s < numSources ; s++)
+		delete sources[s];
+	for (int o = 0 ; o < numOutput ; o++)
+		delete outputs[o];
+	return 0;
+}

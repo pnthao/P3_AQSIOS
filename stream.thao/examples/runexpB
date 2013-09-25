@@ -1,0 +1,13 @@
+#! /bin/sh
+../gen_client/gen_client -l exps/expB_1.log -c config scripts/expB_1 > exps/expB_1.out
+
+cut -d : -f 4 exps/expB_1query1.qo | sed 's/\[/ /g' | sed 's/\]/ /g' > expB_1_q1.out
+cut -d : -f 4 exps/expB_1query2.qo | sed 's/\[/ /g' | sed 's/\]/ /g' > expB_1_q2.out
+cut -d : -f 4 exps/expB_1query3.qo | sed 's/\[/ /g' | sed 's/\]/ /g' > expB_1_q3.out
+cut -d : -f 4 exps/expB_1query4.qo | sed 's/\[/ /g' | sed 's/\]/ /g' > expB_1_q4.out
+cut -d : -f 4 exps/expB_1query5.qo | sed 's/\[/ /g' | sed 's/\]/ /g' > expB_1_q5.out
+cut -d : -f 4 exps/expB_1query6.qo | sed 's/\[/ /g' | sed 's/\]/ /g' > expB_1_q6.out
+cut -d : -f 4 exps/expB_1query7.qo | sed 's/\[/ /g' | sed 's/\]/ /g' > expB_1_q7.out
+cut -d : -f 4 exps/expB_1query8.qo | sed 's/\[/ /g' | sed 's/\]/ /g' > expB_1_q8.out
+cut -d : -f 4 exps/expB_1query9.qo | sed 's/\[/ /g' | sed 's/\]/ /g' > expB_1_q9.out
+cut -d : -f 4 exps/expB_1query10.qo | sed 's/\[/ /g' | sed 's/\]/ /g' > expB_1_q10.out

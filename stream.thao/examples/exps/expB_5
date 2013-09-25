@@ -1,0 +1,18 @@
+
+Optimizing plan
+
+Memory Manager: started with 8193 pages of size 4096
+Operator [12] Time = 0.000797234 Lot = 0
+Operator [10] Time = 0.000307036 Lot = 58
+Operator [9] Time = 0.00354248 Lot = 0
+Operator [5] Time = 0.000703494 Lot = 58
+Operator [4] Time = 0.000332372 Lot = 58
+Operator [3] Time = 0.000298668 Lot = 58
+Operator [2] Time = 0.000453674 Lot = 58
+Operator [1] Time = 0.000491376 Lot = 58
+Operator [0] Time = 0.000498622 Lot = 0
+Total Time: 0.00742496
+Store [0]: <1,1>
+Store [1]: <2,2>
+Store [2]: <1,1>
+Store [3]: <1,1>

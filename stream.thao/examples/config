@@ -1,0 +1,116 @@
+#
+# Config file for the STREAM server
+#
+# None of the config parameters are strictly necessary.  If the value for some
+# parameter is not specified, the system assumes reasonable default values
+#
+
+#
+# The size of the memory in bytes that is used during the execution of the system. 
+#
+# 32 MB
+#
+
+MEMORY_SIZE = 33554432
+
+#
+# Queues have fixed sizes.  A smaller value of QUEUE_SIZE means that the operators
+# execute is a more tightly coupled manner.  This should be an integer value > 1.
+# The queue size is specified in number of pages.  A page is the atomic unit of memory 
+# It is set to 4096 bytes.
+#
+# 
+
+QUEUE_SIZE = 8
+
+#
+# Shared queue size in pages.  A shared queue is a queue which has one writer operator
+# and many read operators.  It is useful to set this value higher than QUEUE_SIZE.
+#
+
+SHARED_QUEUE_SIZE = 32
+
+#
+# This should be a fraction (between 0 & 1).  It is similar to the threshold value
+# used in a disk-based linear hash table.  A smaller value leads to cheaper index updates
+# but lookups could be costlier and vice-versa.
+#  
+INDEX_THRESHOLD = 0.85
+
+#time unit
+TIME_UNIT = 1000
+
+#time unit for input rate computation = 1sec
+INPUT_RATE_TIME_UNIT = 1000000000
+
+#
+#headroom factor, this will be adjusted at runtime, so this can be an arbitrarily 
+#value in (0,1]
+#
+
+HEADROOM_FACTOR = 1
+
+#
+#delay tolerance, for which the system keeps the response time of an output
+#to be delay_tolerance times the corresponding average processing time.
+#
+DELAY_TOLERANCE = 5;
+
+#
+#load manager type: 1: ALM, 2: CTRL, 3: HCTRL, 4: extCTRL, 5: extHCTRL
+#
+
+LOAD_MANAGER = 1;
+
+#parameters for sensitivity analysis
+#INITIAL_GAP: the level the response time is higher/lower than the target when the load
+#manager begin to adjust the headroom factor, in %of the targets
+
+
+INITIAL_GAP = 10;
+
+#NEXT_GAP: for ALM: the increase/ decrease in response time before a second consecutive adjustment
+
+NEXT_GAP = 10
+
+#
+# Long long int value that roughly translates to the duration for which the system is run
+#
+
+RUN_TIME = 60000000;#400000000;#1200000000;#;#0;
+
+
+# the scheduling policy to use
+# 1 --> round robin
+# 2 --> lottery scheduling -- HR
+# 3 --> lottery scheduling with IDs
+# 4 --> lottery scheduling with ready flags
+# 5 --> HR scheduling
+# 6 --> QC scheduling
+# 10 --> WRR cheduling
+SCHEDULING_POLICY = 10
+
+# specify the number of query classes 
+NUMBER_OF_QUERY_CLASSES = 3
+# specify the priorities of the query classes in decreasing order
+PRIORITY_OF_CLASS = 6
+PRIORITY_OF_CLASS = 3
+PRIORITY_OF_CLASS = 1
+
+# specify the number of refreshes the system has to go through to reach steady state
+STEADY_STATE  = 0
+
+# specify the number of timeunits to assign for each scheduler under
+# QC Scheduling
+SCHEDULER_QUOTA = 1000
+
+# specify if the above priorities should be honored or not 
+# 0 --> not honored
+# 1 --> honored
+HONOR_PRIORITIES = 1;
+
+# specify if there is sharing of regular ops ( non- source ops ) among query classes or not
+# 0 --> sharing only within the same query class
+# 1 --> sharing is allowed across boundaries of query classes
+SHARING_AMONG_CLASSES = 0
+
