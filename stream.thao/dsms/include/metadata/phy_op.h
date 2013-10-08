@@ -263,7 +263,9 @@ namespace Physical {
 			struct {
 				unsigned int outputId; // [[ Explanation ]]
 				unsigned int queryId;
-				double queryLoad;
+				double queryLoad; //the actual query load of the query (after shedding) in the current load management cycle
+				double avgQueryLoad; //the capacity usage of the query (before any shedding) over several load management cycle
+				int cycleCount;
 			} OUTPUT;
 			
 			struct {

@@ -3,9 +3,11 @@ store_monitor.lo: store_monitor.cc \
  ../../../../dsms/include/execution/monitors/property_monitor.h \
  ../../../../dsms/include/execution/monitors/property.h \
  ../../../../dsms/include/common/debug.h /usr/include/assert.h \
- /usr/include/features.h /usr/include/bits/predefs.h \
- /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
- /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
+ /usr/include/features.h /usr/include/i386-linux-gnu/bits/predefs.h \
+ /usr/include/i386-linux-gnu/sys/cdefs.h \
+ /usr/include/i386-linux-gnu/bits/wordsize.h \
+ /usr/include/i386-linux-gnu/gnu/stubs.h \
+ /usr/include/i386-linux-gnu/gnu/stubs-32.h
 
 ../../../../dsms/include/execution/monitors/store_monitor.h:
 
@@ -19,12 +21,12 @@ store_monitor.lo: store_monitor.cc \
 
 /usr/include/features.h:
 
-/usr/include/bits/predefs.h:
+/usr/include/i386-linux-gnu/bits/predefs.h:
 
-/usr/include/sys/cdefs.h:
+/usr/include/i386-linux-gnu/sys/cdefs.h:
 
-/usr/include/bits/wordsize.h:
+/usr/include/i386-linux-gnu/bits/wordsize.h:
 
-/usr/include/gnu/stubs.h:
+/usr/include/i386-linux-gnu/gnu/stubs.h:
 
-/usr/include/gnu/stubs-32.h:
+/usr/include/i386-linux-gnu/gnu/stubs-32.h:

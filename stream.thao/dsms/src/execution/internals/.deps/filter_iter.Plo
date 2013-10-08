@@ -2,11 +2,13 @@ filter_iter.lo: filter_iter.cc \
  ../../../../dsms/include/execution/internals/filter_iter.h \
  ../../../../dsms/include/execution/internals/beval.h \
  /usr/include/string.h /usr/include/features.h \
- /usr/include/bits/predefs.h /usr/include/sys/cdefs.h \
- /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-32.h \
- /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stddef.h \
- /usr/include/xlocale.h /usr/include/bits/string3.h \
+ /usr/include/i386-linux-gnu/bits/predefs.h \
+ /usr/include/i386-linux-gnu/sys/cdefs.h \
+ /usr/include/i386-linux-gnu/bits/wordsize.h \
+ /usr/include/i386-linux-gnu/gnu/stubs.h \
+ /usr/include/i386-linux-gnu/gnu/stubs-32.h \
+ /usr/lib/gcc/i686-linux-gnu/4.6/include/stddef.h /usr/include/xlocale.h \
+ /usr/include/i386-linux-gnu/bits/string3.h \
  ../../../../dsms/include/execution/internals/eval_context.h \
  ../../../../dsms/include/execution/internals/tuple.h \
  ../../../../dsms/include/execution/internals/aeval.h \
@@ -21,21 +23,21 @@ filter_iter.lo: filter_iter.cc \
 
 /usr/include/features.h:
 
-/usr/include/bits/predefs.h:
+/usr/include/i386-linux-gnu/bits/predefs.h:
 
-/usr/include/sys/cdefs.h:
+/usr/include/i386-linux-gnu/sys/cdefs.h:
 
-/usr/include/bits/wordsize.h:
+/usr/include/i386-linux-gnu/bits/wordsize.h:
 
-/usr/include/gnu/stubs.h:
+/usr/include/i386-linux-gnu/gnu/stubs.h:
 
-/usr/include/gnu/stubs-32.h:
+/usr/include/i386-linux-gnu/gnu/stubs-32.h:
 
-/usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stddef.h:
+/usr/lib/gcc/i686-linux-gnu/4.6/include/stddef.h:
 
 /usr/include/xlocale.h:
 
-/usr/include/bits/string3.h:
+/usr/include/i386-linux-gnu/bits/string3.h:
 
 ../../../../dsms/include/execution/internals/eval_context.h:
 

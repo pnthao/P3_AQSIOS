@@ -140,7 +140,7 @@ query: select * from W where m <15;
 dest: /dev/null
 query: select * from X [Range 10 seconds], Y [Range 10 seconds] where X.l = Y.l ;
 dest: /home/thao/workspace/p3-aqsios/outputs/detailed_data/expN_1query15.qo
-query: select * from Z [Range 10 seconds], A [Range 10 seconds] where Z.l = A.l ;
+query: active select * from Z [Range 10 seconds], A [Range 10 seconds] where Z.l = A.l ;
 dest: /dev/null
 query: active select AVG(m) from B [Range 10 seconds];
 dest: /home/thao/workspace/p3-aqsios/outputs/detailed_data/expN_1query17.qo

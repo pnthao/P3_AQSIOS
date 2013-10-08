@@ -39,7 +39,8 @@ namespace Execution {
 	class Drop;
 	class LoadManager {
 	public:
-	
+		LoadManager();
+		virtual ~LoadManager();
 		//Array of candidate drop operators to be considered for shedding task
 		Physical::Operator* drops[MAX_OPS_PER_TYPE];
 		// Number of drop operators in the candidate list
@@ -103,12 +104,6 @@ namespace Execution {
 		   
 		   //the stable heavily-loadded-cost is available?
 		   bool effective_cost_available; 
-		   
-		 
-		    
-		  
-		LoadManager();		
-		virtual ~LoadManager();
 		
 		//for experiments only, this file store the drop percentage calculated in each cycle
 		FILE * sheddingLogFile ;
@@ -275,9 +270,11 @@ namespace Execution {
 		//double headroom_temp;
 		void resetCapacityUsageTracking(); 
 		void updateAvgCapacityUsage(double totalLoad);
+		//reset the value of query load stored in the  (physical) output operator
+		void updateAvgQueryLoad();
 		
 #endif //_CTRL_LOAD_MANAGE_	    
-		
+
 	
 	};
 }

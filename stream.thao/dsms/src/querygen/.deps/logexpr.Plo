@@ -1,8 +1,11 @@
 logexpr.lo: logexpr.cc ../../../dsms/include/common/debug.h \
  /usr/include/assert.h /usr/include/features.h \
- /usr/include/bits/predefs.h /usr/include/sys/cdefs.h \
- /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-32.h ../../../dsms/include/querygen/logop.h \
+ /usr/include/i386-linux-gnu/bits/predefs.h \
+ /usr/include/i386-linux-gnu/sys/cdefs.h \
+ /usr/include/i386-linux-gnu/bits/wordsize.h \
+ /usr/include/i386-linux-gnu/gnu/stubs.h \
+ /usr/include/i386-linux-gnu/gnu/stubs-32.h \
+ ../../../dsms/include/querygen/logop.h \
  ../../../dsms/include/common/constants.h \
  ../../../dsms/include/common/types.h ../../../dsms/include/common/aggr.h \
  ../../../dsms/include/common/op.h \
@@ -14,15 +17,15 @@ logexpr.lo: logexpr.cc ../../../dsms/include/common/debug.h \
 
 /usr/include/features.h:
 
-/usr/include/bits/predefs.h:
+/usr/include/i386-linux-gnu/bits/predefs.h:
 
-/usr/include/sys/cdefs.h:
+/usr/include/i386-linux-gnu/sys/cdefs.h:
 
-/usr/include/bits/wordsize.h:
+/usr/include/i386-linux-gnu/bits/wordsize.h:
 
-/usr/include/gnu/stubs.h:
+/usr/include/i386-linux-gnu/gnu/stubs.h:
 
-/usr/include/gnu/stubs-32.h:
+/usr/include/i386-linux-gnu/gnu/stubs-32.h:
 
 ../../../dsms/include/querygen/logop.h:
 

@@ -42,8 +42,6 @@ LoadManager::LoadManager()
 	sheddingLogFile = 0;
 	delayEstimationFile = fopen("/home/thao/workspace/stream.test.thao/load_managing/Feb8/delay_estimation","wt");
 	
-	avg_capacity_usage = 0;
-	cycle_count = 0;
 	//headroom_temp = 0;
 	
 #ifdef _CTRL_LOAD_MANAGE_
@@ -66,7 +64,8 @@ LoadManager::LoadManager()
 	ctrl_count_real_delay = 0;
 	ctrl_headroom = headroom_factor;
 	ctrl_sum_total_input_tuples = 0;
-
+	avg_capacity_usage = 0;
+	cycle_count = 0;
 
 #endif //_CTRL_LOAD_MANAGE_
 }
@@ -194,7 +193,7 @@ int LoadManager::run(bool recomputeLoadCoefficient, int schedulingtype)
 				((StreamSource*)this->inputs[i]->instOp)->computeInputRate();
 				((StreamSource*)this->inputs[i]->instOp)->resetInputRateComputationCycle();
 
-				computeLoadCoefficient(inputs[i],1, ((((StreamSource*)inputs[i]->instOp)->inputRate)*(100- inputs[i]->instOp->drop_percent))/100.0,0, coef, snapshot_coef, effective_coef);
+				computeLoadCoefficient(inputs[i],1,0,((((StreamSource*)inputs[i]->instOp)->inputRate)*(100- inputs[i]->instOp->drop_percent))/100.0, coef, snapshot_coef, effective_coef);
 				this->inputs[i]->instOp->setLoadCoefficient(coef, snapshot_coef, effective_coef);
 
 				if(snapshot_coef> 1.5*coef){
@@ -217,7 +216,7 @@ int LoadManager::run(bool recomputeLoadCoefficient, int schedulingtype)
 		for (unsigned int i = 0; i<this->numInputs; i++)
 		{
 			if(inputs[i]->instOp->isShedder ==true){
-				computeLoadCoefficient(inputs[i],1, (inputs[i]->instOp->input_load*(100-inputs[i]->instOp->drop_percent))/100.0,0,coef, snapshot_coef, effective_coef);
+				computeLoadCoefficient(inputs[i],1,0,(inputs[i]->instOp->input_load*(100-inputs[i]->instOp->drop_percent))/100.0,coef, snapshot_coef, effective_coef);
 
 				this->inputs[i]->instOp->setLoadCoefficient(coef, snapshot_coef, effective_coef);
 
@@ -269,6 +268,7 @@ int LoadManager::run(bool recomputeLoadCoefficient, int schedulingtype)
 	}*/
 	//printf("load: %f\n", totalLoad);
 	updateAvgCapacityUsage(totalLoad);
+	updateAvgQueryLoad();
 /***********************
  * RESPONSE TIME MONITOR
 ***********************/	
@@ -544,7 +544,7 @@ int LoadManager::findRelatedOutput_Drop(Physical::Operator* op, Drop *drop)
 
 int LoadManager::computeLoadCoefficient (Physical::Operator *op, double preSel, double preCoef, double source_rate, double& coef, double& cur_coef,double &effective_coef)
 {
-	
+
 	coef = preSel*op->instOp->local_cost_per_tuple;
 	cur_coef = preSel*op->instOp->snapshot_local_cost_per_tuple;
 	preCoef += coef;
@@ -716,4 +716,21 @@ void LoadManager::updateAvgCapacityUsage(double totalLoad)
 	
 	avg_capacity_usage = (avg_capacity_usage*cycle_count + current_usage)/(++cycle_count);
 	//printf("%d: %f: %f\n", cycle_count, totalLoad, current_usage );
+}
+void LoadManager::updateAvgQueryLoad()
+{
+	//this method is called after each load management cycle, when the query load in that cycle
+	//has been updated by the method computeLoadCoefficient
+	for(int i =0;i<numOps;i++)
+		if(ops[i]->kind == PO_OUTPUT){
+			double currentQueryLoad =
+					(ops[i]->u.OUTPUT.queryLoad/(100-(inputs[0]->instOp)->drop_percent))*100;
+			currentQueryLoad = (currentQueryLoad/(headroom_factor* input_rate_time_unit))*100;
+			ops[i]->u.OUTPUT.avgQueryLoad = (ops[i]->u.OUTPUT.avgQueryLoad
+											*ops[i]->u.OUTPUT.cycleCount + currentQueryLoad)
+											/(++ops[i]->u.OUTPUT.cycleCount);
+			//reset the query load for the new load management cycle
+			ops[i]->u.OUTPUT.queryLoad = 0;
+
+		}
 }

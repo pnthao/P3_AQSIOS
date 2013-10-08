@@ -21,7 +21,7 @@ private:
 	double* local_priority;
 
 public:
-	list<QueryInfo> activeQueries; //list of active queries running on this node
+	list<QueryInfo*> activeQueries; //list of active queries running on this node
 	Node_Info(int number_of_classes)
 	{
 		this->number_of_classes = number_of_classes;
@@ -35,14 +35,27 @@ public:
 		delete[] capacity;
 		delete[] capacity_usage;
 		delete[] local_priority;
+		std::list<QueryInfo*>::iterator it = activeQueries.begin();
+		while(it!=activeQueries.end()){
+			QueryInfo* qi = *it;
+			it = activeQueries.erase(it);
+			if(qi)
+				delete qi;
+		}
 	}
-	void serialize(char* msg); //serialize the node info into string recognizable to the coordinator.
+	/*serialize the node info into string recognizable to the coordinator.
+		msgType = 0: all info
+		msgType = 1: class-level info only
+		msgType = 2: active query info only
+	*/
+	void serialize(char* msg, int msgType =0);
 	int extract(char * msg); //extract the node info from the msg;
 	int set_capacity(int class_id, double capacity); //class_id starts from 0;
 	int set_capacity_usage(int class_id, double capacity_usage);
 	int set_local_priority(int class_id, double priority);
 	int addActiveQuery(int queryID);
 	int removeActiveQuery(int queryID);
+	int setQueryLoad(int queryID, double load);
 };
 
 #endif /* NODE_INFO_H_ */

@@ -70,6 +70,8 @@ namespace Execution {
 		
 		// amardilos, by Thao Pham
 		void updateNodeInfo(Communicator* comm);
+		void updateActiveQueriesList(Communicator *comm);
+
   };
 }
 
