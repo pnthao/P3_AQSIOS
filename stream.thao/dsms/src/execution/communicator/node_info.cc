@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
+#include <sstream>
 using namespace std;
 
 int Node_Info::set_capacity(int class_id, double capacity){

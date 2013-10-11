@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <netdb.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <sstream>
 //#include <arpa/inet.h>
 using namespace std;
 using namespace Execution;
@@ -170,7 +172,7 @@ void* Communicator::receiving(void * arg){
 			//if there is a coming connection request
 			if(FD_ISSET(communicator->sockfd_listening,&readablefds)){
 				//creating a connection with the requesting AQSIOS node to initialize the query migration process
-				communicator->addMigrationThread(communicator->openMigrationChannel());
+				communicator->openMigrationChannelAsDest();
 			}
 			if(FD_ISSET(communicator->sockfd_coordinator, &readablefds))
 			{
@@ -186,7 +188,7 @@ void* Communicator::receiving(void * arg){
 	printf("receiving thread is about to exit\n");
 	pthread_exit(NULL);
 }
-int Communicator::sendMessage(char* msg)
+int Communicator::sendMessage(const char* msg)
 {
 	int n = write(sockfd_coordinator,msg,strlen(msg)+1);
 	if (n<0){
@@ -227,7 +229,7 @@ int Communicator::createListeningSocket(){
 	return 0;
 }
 
-pthread_t Communicator::openMigrationChannel(){
+pthread_t Communicator::openMigrationChannelAsDest(){
 
 	//create a new thread to handle this new migration channel
 	pthread_t migration_threadID;
@@ -236,56 +238,92 @@ pthread_t Communicator::openMigrationChannel(){
 	pthread_attr_setdetachstate(&migration_thread_attr,PTHREAD_CREATE_JOINABLE);
 
 	printf("creating a new query migration thread \n");
+
+	MigrationInfo info;
+	info.threadID = migration_threadID;
+	info.type = MIGRATION_DEST;
+	info.dest_ip = "";
+	info.dest_port = 0;
+
+	addMigrationThread(info);
 	pthread_create(&migration_threadID, &migration_thread_attr, handleMigration, (void*)this);
 
 	return migration_threadID;
 }
+pthread_t Communicator::openMigrationChannelAsSource(char* destIP, int destPort,vector<int> queryID){
 
+	//create a new thread to handle this new migration channel
+	pthread_t migration_threadID;
+	pthread_attr_t migration_thread_attr;
+	pthread_attr_init(&migration_thread_attr);
+	pthread_attr_setdetachstate(&migration_thread_attr,PTHREAD_CREATE_JOINABLE);
+
+	printf("creating a new query migration thread as source\n");
+
+	MigrationInfo info;
+	info.threadID = migration_threadID;
+	info.type = MIGRATION_SOURCE;
+	info.dest_ip = destIP;
+	info.dest_port = destPort;
+
+	addMigrationThread(info);
+	pthread_create(&migration_threadID, &migration_thread_attr, handleMigration, (void*)this);
+
+	return migration_threadID;
+}
 void* Communicator::handleMigration(void* arg){
 
 	Communicator* comm = (Communicator*) arg;
+	MigrationInfo *migrationInfo = comm->getMigrationInfo(pthread_self());
+	if(migrationInfo->type== MIGRATION_DEST)
+	{
+		//accept the connection request from the migration source
+		socklen_t clilen;
+		sockaddr_in cli_addr;
 
-	//accept the connection request from the migration source
-	socklen_t clilen;
-	sockaddr_in cli_addr;
+		clilen = sizeof(cli_addr);
+		int sockfd_migrationSrc = accept(comm->sockfd_listening,
+				(struct sockaddr *) &cli_addr,
+				&clilen);
+		if (sockfd_migrationSrc < 0){
+			printf("ERROR on accept query migration request");
+			comm->removeMigrationThread(pthread_self());
+			pthread_exit(NULL);
+		}
+		//else: start the migration communication
+		printf("starting query migration...");
 
-	clilen = sizeof(cli_addr);
-	int sockfd_migrationSrc = accept(comm->sockfd_listening,
-			(struct sockaddr *) &cli_addr,
-			&clilen);
-	if (sockfd_migrationSrc < 0){
-		printf("ERROR on accept query migration request");
-		comm->removeMigrationThread(pthread_self());
-		pthread_exit(NULL);
+		printf("end migration channel as destination");
+		//end
+		close(sockfd_migrationSrc);
 	}
-	//else: start the migration communication
-	printf("starting query migration...");
-
-	//end
-	close(sockfd_migrationSrc);
+	if(migrationInfo->type==MIGRATION_SOURCE)
+	{
+		comm->handleMigrationAsSource(migrationInfo);
+	}
 	comm->removeMigrationThread(pthread_self());
 	pthread_exit(NULL);
 
 }
 
-void Communicator::addMigrationThread(pthread_t threadID)
+void Communicator::addMigrationThread(MigrationInfo info)
 {
 	pthread_mutex_lock(&mutex_migrationThreadIDs);
-	list<pthread_t>::iterator it;
+	list<MigrationInfo>::iterator it;
 	for(it = migration_threadIDs.begin(); it!=migration_threadIDs.end(); it++){
-			if((*it)==threadID)//already there
+			if((*it).threadID==info.threadID)//already there
 				return;
 	}
-	migration_threadIDs.push_back(threadID);
+	migration_threadIDs.push_back(info);
 	pthread_mutex_unlock(&mutex_migrationThreadIDs);
 }
 
 void Communicator::removeMigrationThread(thread_t threadID)
 {
 	pthread_mutex_lock(&mutex_migrationThreadIDs);
-	list<pthread_t>::iterator it;
+	list<MigrationInfo>::iterator it;
 	for(it = migration_threadIDs.begin(); it!=migration_threadIDs.end(); it++){
-		if((*it)==threadID){
+		if((*it).threadID==threadID){
 			migration_threadIDs.erase(it);
 			break;
 		}
@@ -295,11 +333,113 @@ void Communicator::removeMigrationThread(thread_t threadID)
 
 void Communicator::joinAllMigrationThreads(){
 	pthread_mutex_lock(&mutex_migrationThreadIDs);
-	list<pthread_t>::iterator it;
+	list<MigrationInfo>::iterator it = migration_threadIDs.begin();
 	for(it = migration_threadIDs.begin(); it!=migration_threadIDs.end(); it++){
-		pthread_join((*it), NULL);
+		pthread_join((*it).threadID, NULL);
 	}
 	pthread_mutex_unlock(&mutex_migrationThreadIDs);
 }
 
+Communicator::MigrationInfo* Communicator::getMigrationInfo(pthread_t threadID)
+{
+	pthread_mutex_lock(&mutex_migrationThreadIDs);
+	list<MigrationInfo>::iterator it;
+	for(it = migration_threadIDs.begin(); it!=migration_threadIDs.end(); it++){
+		if((*it).threadID==threadID){
+			return &(*it);
+		}
+	}
+	pthread_mutex_unlock(&mutex_migrationThreadIDs);
+	return NULL;//not found
+}
 
+void Communicator::readAndProcessCoordinatorMessage(){
+	//read coordinator message
+	char buf[256];
+	int result = read(sockfd_coordinator,buf,256);
+	if(result ==0)//the socket is closed from coordinator side{
+		return ;
+
+	char* msg = buf;
+	//check for message type
+	if(strncmp(msg,"QM",2)==0) //query migration
+	{
+		//format QM,<destination ip>,<destination port>,<queryID1>,<queryID2>...,E)
+		 //trim the msg header
+		int len = strchr(msg,',') - msg;
+		//the next value is the destination ip
+		msg = msg+len+1;
+		char *destIP =msg;
+		len = strchr(msg,',') - msg;
+		destIP[len]= 0;
+		//the next part is the destination port
+		msg = msg+ len +1;
+		int destPort = strtol(msg,&msg,10);
+		msg ++; //skip the comma
+		//list of query IDs
+		vector<int> queryIDs;
+		while(strcmp(msg,"E")!=0)//not end of message yet
+		{
+			queryIDs.push_back(strtol(msg,&msg, 10));
+			msg++;
+		}
+		//open the migration channel
+		openMigrationChannelAsSource(destIP,destPort, queryIDs);
+	}
+	if(strncmp(msg,"ST",2)==0) //start time stamp
+	{
+
+	}
+
+
+}
+void Communicator::handleMigrationAsSource(MigrationInfo* migrationInfo)
+{
+	//connect to the destination node
+	struct sockaddr_in dest_addr;
+	struct hostent *dest;
+
+	int sockfd_migrationDest = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd_migrationDest < 0){
+		printf("ERROR opening socket to connect to the migration destination\n");
+		removeMigrationThread(pthread_self());
+		pthread_exit(NULL);
+	}
+	dest = gethostbyname(migrationInfo->dest_ip.c_str());
+	if (dest == NULL) {
+		printf("ERROR, no such host\n");
+		removeMigrationThread(pthread_self());
+		pthread_exit(NULL);
+		return;
+	}
+
+	bzero((char *) &dest_addr, sizeof(dest_addr));
+
+	dest_addr.sin_family = AF_INET;
+	bcopy((char *)dest->h_addr,(char *)&dest_addr.sin_addr.s_addr, dest->h_length);
+	dest_addr.sin_port = htons(migrationInfo->dest_port);
+
+	if (connect(sockfd_migrationDest,(struct sockaddr *) &dest_addr,sizeof(dest_addr)) < 0){
+		printf("ERROR connecting\n");
+		removeMigrationThread(pthread_self());
+		pthread_exit(NULL);
+		return;
+	}
+
+	printf("connected to the destination node, starting query migration... \n");
+
+	//send the list of query IDs to be shipped
+	stringstream ss;
+	ss<<"QI,";
+	for(int i=0;i<migrationInfo->queryIDs.size(); i++){
+		ss << migrationInfo->queryIDs[i] <<",";
+	}
+	ss<<"E";
+	sendMessage(ss.str().c_str());
+
+	//TODO: send the list of source ID together with the current file pos
+
+
+	printf("end migration channel as source \n");
+	close(sockfd_migrationDest);
+}

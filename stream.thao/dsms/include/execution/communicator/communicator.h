@@ -8,18 +8,30 @@
 #ifndef COMMUNICATOR_H_
 #define COMMUNICATOR_H_
 
-
-#include <string.h>
+#include<string.h>
 #include <stdio.h>
 #include<thread_db.h>
+#include<string>
+#include<vector>
 
 #ifndef NODE_INFO_H_
 #include "execution/communicator/node_info.h"
 #endif
 
+#define MIGRATION_SOURCE 1
+#define MIGRATION_DEST 2
+
 namespace Execution{
 
 class Communicator{
+public:
+	struct MigrationInfo{
+		pthread_t threadID;
+		int type; //the type of the migration: the current node is serving as source (1) or destination(2)
+		std::string dest_ip; //valid only when when this node is source
+		int dest_port; //valid only when this node is source
+		std::vector<int> queryIDs;
+	};
 private:
 	char* server_address; //coordinator address
 	int server_port; //coordinator port
@@ -37,7 +49,7 @@ private:
 	int bStopReceiverThread;
 
 	//the list of IDs of threads that is currently handling query migration
-	std::list<pthread_t> migration_threadIDs;
+	std::list<MigrationInfo> migration_threadIDs;
 	//mutex to protect the above list
 	pthread_mutex_t mutex_migrationThreadIDs;
 
@@ -52,6 +64,7 @@ public:
 	pthread_mutex_t mutexStopReceiverThread;
 
 	Node_Info* nodeInfo;
+
 	Communicator(Node_Info* node_info)
 	{
 		server_address = new char[128];
@@ -101,16 +114,18 @@ public:
 	static void* report(void* arg); //run by a child thread, arg should be the this pointer
 	static void *receiving(void* arg);//run by another child thread, arg should be the this pointer
 	int connectCoordinator();
-	int sendMessage(char* msg);
+	int sendMessage(const char* msg);
 	char* receiveMessage();
 	//this function creates a thread to handle migration, and returns the thread_id
-	pthread_t openMigrationChannel();
+	pthread_t openMigrationChannelAsDest();
+	pthread_t openMigrationChannelAsSource(char* destIP, int destPort,vector<int> queryID);
 	static void* handleMigration(void* arg);
-	void addMigrationThread(pthread_t threadID);
+	void addMigrationThread(MigrationInfo info);
 	void removeMigrationThread(pthread_t threadID);
 	void joinAllMigrationThreads();
-
-
+	MigrationInfo* getMigrationInfo(pthread_t threadID);
+	void readAndProcessCoordinatorMessage();
+	void handleMigrationAsSource(MigrationInfo *migrationInfo);
 };
 
 }
