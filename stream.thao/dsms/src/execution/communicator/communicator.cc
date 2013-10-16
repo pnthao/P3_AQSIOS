@@ -250,7 +250,7 @@ pthread_t Communicator::openMigrationChannelAsDest(){
 
 	return migration_threadID;
 }
-pthread_t Communicator::openMigrationChannelAsSource(char* destIP, int destPort,vector<int> queryID){
+pthread_t Communicator::openMigrationChannelAsSource(char* destIP, int destPort,set<int> queryIDs){
 
 	//create a new thread to handle this new migration channel
 	pthread_t migration_threadID;
@@ -265,6 +265,7 @@ pthread_t Communicator::openMigrationChannelAsSource(char* destIP, int destPort,
 	info.type = MIGRATION_SOURCE;
 	info.dest_ip = destIP;
 	info.dest_port = destPort;
+	info.queryIDs = queryIDs;
 
 	addMigrationThread(info);
 	pthread_create(&migration_threadID, &migration_thread_attr, handleMigration, (void*)this);
@@ -377,10 +378,10 @@ void Communicator::readAndProcessCoordinatorMessage(){
 		int destPort = strtol(msg,&msg,10);
 		msg ++; //skip the comma
 		//list of query IDs
-		vector<int> queryIDs;
+		set<int> queryIDs;
 		while(strcmp(msg,"E")!=0)//not end of message yet
 		{
-			queryIDs.push_back(strtol(msg,&msg, 10));
+			queryIDs.insert(strtol(msg,&msg, 10));
 			msg++;
 		}
 		//open the migration channel
@@ -431,14 +432,15 @@ void Communicator::handleMigrationAsSource(MigrationInfo* migrationInfo)
 	//send the list of query IDs to be shipped
 	stringstream ss;
 	ss<<"QI,";
-	for(int i=0;i<migrationInfo->queryIDs.size(); i++){
-		ss << migrationInfo->queryIDs[i] <<",";
+	set<int>::iterator it;
+	for(it=migrationInfo->queryIDs.begin();it!=migrationInfo->queryIDs.end(); it++){
+		ss << *it <<",";
 	}
 	ss<<"E";
 	sendMessage(ss.str().c_str());
 
 	//TODO: send the list of source ID together with the current file pos
-
+	std::map<Operator*, streampos> sources;
 
 	printf("end migration channel as source \n");
 	close(sockfd_migrationDest);

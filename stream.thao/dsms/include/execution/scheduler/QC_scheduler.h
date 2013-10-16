@@ -18,6 +18,8 @@
 #endif
 
 #include <vector>
+#include <set>
+#include<map>
 
 namespace Execution {
 	class QCScheduler : public Scheduler {
@@ -71,6 +73,7 @@ namespace Execution {
 		// amardilos, by Thao Pham
 		void updateNodeInfo(Communicator* comm);
 		void updateActiveQueriesList(Communicator *comm);
+		virtual void getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,streampos> &sourceFilePos);
 
   };
 }

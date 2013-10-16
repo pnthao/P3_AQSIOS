@@ -146,6 +146,7 @@ int QCScheduler::run (long long int numTimeUnits) {
 	//initialize a communication object  to communicate to the global coordinator
 	Node_Info *node_info = new Node_Info(this->n_query_classes);
 	Communicator* comm = new Communicator("paros.cs.pitt.edu",8001,node_info);
+	comm->mainScheduler = this;
 	//set the initial list of active queries
 	updateActiveQueriesList(comm);
 	comm->start();
@@ -576,3 +577,13 @@ void QCScheduler::setSteadyState(){
 	}
 }
 
+void QCScheduler::getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,streampos> &sourceFilePos){
+
+	/*getFilePos implemented in file_source, which stream_source operator will call and return to this function
+	no need to use mutex here, since it is ok if the read pos is off the current by one line
+	this is a simulation of the stream source connection anyway
+	*/
+	for(int i=0;i<num_loadMgrs; i++){
+		loadMgrs[i]->getSourceFilePos(queryIDs,sourceFilePos);
+	}
+};

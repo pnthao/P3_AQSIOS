@@ -24,15 +24,23 @@
 #include "common/constants.h"
 #endif
 
+#include<set>
+#include<map>
+
 //#ifndef _PARAMS_
 //#include "server/params.h"
 //#endif
 extern double HEADROOM_FACTOR;
 //end of part 1 of load mamaging, by Thao Pham
-
+using namespace std;
 namespace Execution {
 	class Scheduler {
 	public:
+		//Amardilos
+		//get the list of file pos of the sources corresponding to a list of query ID,
+		//the related schedulers is expected to provide an override of this method
+		virtual void getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,streampos> &sourceFilePos){};
+
 		/**
 		 * Add a new operator to schedule
 		 */

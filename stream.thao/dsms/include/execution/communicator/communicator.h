@@ -12,10 +12,14 @@
 #include <stdio.h>
 #include<thread_db.h>
 #include<string>
-#include<vector>
+#include<set>
 
 #ifndef NODE_INFO_H_
 #include "execution/communicator/node_info.h"
+#endif
+
+#ifndef _SCHEDULER_
+#include "execution/scheduler/scheduler.h"
 #endif
 
 #define MIGRATION_SOURCE 1
@@ -30,7 +34,7 @@ public:
 		int type; //the type of the migration: the current node is serving as source (1) or destination(2)
 		std::string dest_ip; //valid only when when this node is source
 		int dest_port; //valid only when this node is source
-		std::vector<int> queryIDs;
+		std::set<int> queryIDs;
 	};
 private:
 	char* server_address; //coordinator address
@@ -64,6 +68,7 @@ public:
 	pthread_mutex_t mutexStopReceiverThread;
 
 	Node_Info* nodeInfo;
+	Scheduler* mainScheduler;
 
 	Communicator(Node_Info* node_info)
 	{
@@ -118,7 +123,7 @@ public:
 	char* receiveMessage();
 	//this function creates a thread to handle migration, and returns the thread_id
 	pthread_t openMigrationChannelAsDest();
-	pthread_t openMigrationChannelAsSource(char* destIP, int destPort,vector<int> queryID);
+	pthread_t openMigrationChannelAsSource(char* destIP, int destPort,set<int> queryIDs);
 	static void* handleMigration(void* arg);
 	void addMigrationThread(MigrationInfo info);
 	void removeMigrationThread(pthread_t threadID);

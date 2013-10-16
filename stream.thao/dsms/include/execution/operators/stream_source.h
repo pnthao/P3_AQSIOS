@@ -189,7 +189,8 @@ namespace Execution {
 		unsigned long long int ctrl_checkpoint_ts;
 		
 #endif //_CTRL_LOAD_MANAGE_
-
+		//ArmaDILoS
+		std::streampos getCurPos();
 		//end of load managing, by Thao Pham
 	};
 }

@@ -1,6 +1,7 @@
 #ifndef _TABLE_SOURCE_
 #define _TABLE_SOURCE_
-
+#include<iostream>
+using namespace std;
 namespace Interface {
 
 /**
@@ -82,6 +83,9 @@ namespace Interface {
 		virtual int getNext (char *&tuple, unsigned int &len, bool& isHeartbeat,
 						 unsigned long long int &cursysTime, bool dataInBuffer) = 0;
 		virtual int loadSourceData() =0;
+
+		//for ArmaDilos
+		virtual streampos getCurPos() = 0;
 
 		//end of part 1 added by Thao Pham
 		/**

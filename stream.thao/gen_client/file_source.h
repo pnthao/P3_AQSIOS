@@ -13,8 +13,10 @@
 #include <queue>
 #endif
 #include <fstream>
+#include <iostream>
 
 using Interface::TableSource;
+using namespace std;
 
 namespace Client {
 	
@@ -66,6 +68,9 @@ namespace Client {
 					     unsigned long long int &cursysTime, bool dataInBuffer);
 
 		int loadSourceData();
+		//ArmaDiLos
+		virtual streampos getCurPos();
+
 		//end of part 2 added by Thao Pham to load all source data to memory
 
 		//end of part 1 of response time calculation by LAM

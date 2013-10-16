@@ -32,8 +32,11 @@
 #ifndef _PHY_OP_
 #include "metadata/phy_op.h"
 #endif
+#include<iostream>
+#include<set>
+#include <map>
 
-
+using namespace std;
 namespace Execution {
 	
 	class Drop;
@@ -273,6 +276,10 @@ namespace Execution {
 		//reset the value of query load stored in the  (physical) output operator
 		void updateAvgQueryLoad();
 		
+		//ArmaDiLos
+		void getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,streampos> &sourceFilePos);
+		void findSource(Physical::Operator* op, set<Operator*> &relatedSource);
+
 #endif //_CTRL_LOAD_MANAGE_	    
 
 	

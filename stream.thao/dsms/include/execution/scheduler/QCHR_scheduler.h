@@ -97,8 +97,6 @@ namespace Execution {
 		 */
 		bool steadySystem ();	
 
-		
-
 	};
 }
 

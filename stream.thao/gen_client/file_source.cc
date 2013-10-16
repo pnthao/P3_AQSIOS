@@ -447,4 +447,7 @@ int FileSource::computeOffsets ()
 	return 0;
 }
 		
-
+//armaDILos
+streampos FileSource::getCurPos(){
+	return input.tellg();
+}

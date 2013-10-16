@@ -595,3 +595,4 @@ void QCHRScheduler::setSteadyState(){
 
 
 //end of Query Class Scheduling by LAM
+

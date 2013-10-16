@@ -719,3 +719,9 @@ int StreamSource::run_with_shedder (TimeSlice timeSlice)
 {
 	return 0;
 }
+
+//ArmaDILoS
+
+std::streampos StreamSource::getCurPos(){
+	return source->getCurPos();
+}

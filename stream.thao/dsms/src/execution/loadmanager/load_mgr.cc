@@ -8,6 +8,7 @@
  #include <math.h>
  #include <stdlib.h>
  #include <stdio.h>
+#include <set>
 using namespace std;
 
 #ifndef _DEBUG_
@@ -733,4 +734,26 @@ void LoadManager::updateAvgQueryLoad()
 			ops[i]->u.OUTPUT.queryLoad = 0;
 
 		}
+}
+
+void LoadManager::findSource(Physical::Operator* op, set<Operator*> &relatedSource){
+	if(op->kind==PO_STREAM_SOURCE)
+		relatedSource.insert(op->instOp);
+	else
+		for(unsigned int i=0;i<op->numInputs;i++)
+			findSource(op->inputs[i],relatedSource);
+}
+
+void LoadManager::getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,streampos> &sourceFilePos){
+	set<Operator*> relatedSources;
+	for (int i=0;i<numOutputs; i++){
+		set<int>::iterator it = queryIDs.find(outputs[i]->u.OUTPUT.queryId);
+		if(it!=queryIDs.end()){
+			findSource(outputs[i],relatedSources);
+		}
+	}
+	set<Operator*>::const_iterator it;
+	for(it = relatedSources.begin(); it!=relatedSources.end(); it++){
+		sourceFilePos.insert(std::pair<Operator*,streampos>(*it, ((StreamSource*)(*it))->getCurPos()));
+	}
 }
