@@ -31,6 +31,7 @@ class Communicator{
 public:
 	struct MigrationInfo{
 		pthread_t threadID;
+		int sockfd_migration; //the socket used to communicate during the query migration
 		int type; //the type of the migration: the current node is serving as source (1) or destination(2)
 		std::string dest_ip; //valid only when when this node is source
 		int dest_port; //valid only when this node is source
@@ -119,7 +120,8 @@ public:
 	static void* report(void* arg); //run by a child thread, arg should be the this pointer
 	static void *receiving(void* arg);//run by another child thread, arg should be the this pointer
 	int connectCoordinator();
-	int sendMessage(const char* msg);
+	int sendMessageToCoordinator(const char* msg);
+	int sendMessage(int dest_sockfd, const char* msg);
 	char* receiveMessage();
 	//this function creates a thread to handle migration, and returns the thread_id
 	pthread_t openMigrationChannelAsDest();
@@ -128,9 +130,10 @@ public:
 	void addMigrationThread(MigrationInfo info);
 	void removeMigrationThread(pthread_t threadID);
 	void joinAllMigrationThreads();
-	MigrationInfo* getMigrationInfo(pthread_t threadID);
+	int	getMigrationInfo(pthread_t threadID, MigrationInfo &migrationInfo);
 	void readAndProcessCoordinatorMessage();
-	void handleMigrationAsSource(MigrationInfo *migrationInfo);
+	void handleMigrationAsSource(MigrationInfo &migrationInfo);
+	void handleMigrationAsDest(MigrationInfo &migrationInfo);
 };
 
 }

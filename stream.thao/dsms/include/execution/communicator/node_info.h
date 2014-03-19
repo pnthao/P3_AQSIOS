@@ -8,6 +8,7 @@
 #ifndef NODE_INFO_H_
 #define NODE_INFO_H_
 #include <list>
+#include <vector>
 using namespace std;
 struct QueryInfo{
 	int queryID;
@@ -16,32 +17,31 @@ struct QueryInfo{
 class Node_Info{
 private:
 	int number_of_classes;
-	double* capacity;
-	double* capacity_usage; //list of capacity usage of the classes ( = 0 if the class does not exist in the current node)
-	double* local_priority;
+	vector<double> capacities;
+	vector<double> capacity_usages; //list of capacity usage of the classes ( = 0 if the class does not exist in the current node)
+	vector<double> local_priorities;
 
 public:
-	list<QueryInfo*> activeQueries; //list of active queries running on this node
+	list<QueryInfo> activeQueries; //list of active queries running on this node
 	Node_Info(int number_of_classes)
 	{
 		this->number_of_classes = number_of_classes;
-		capacity = new double[number_of_classes];
-		capacity_usage = new double[number_of_classes];
-		local_priority = new double[number_of_classes];
+		for(int i=0;i<number_of_classes;i++){
+			capacities.push_back(0.0);
+			capacity_usages.push_back(0.0);
+			local_priorities.push_back(0.0);
+		}
 	}
 
 	~Node_Info()
 	{
-		delete[] capacity;
-		delete[] capacity_usage;
-		delete[] local_priority;
-		std::list<QueryInfo*>::iterator it = activeQueries.begin();
+		/*std::list<QueryInfo*>::iterator it = activeQueries.begin();
 		while(it!=activeQueries.end()){
 			QueryInfo* qi = *it;
 			it = activeQueries.erase(it);
 			if(qi)
 				delete qi;
-		}
+		}*/
 	}
 	/*serialize the node info into string recognizable to the coordinator.
 		msgType = 0: all info
@@ -49,7 +49,6 @@ public:
 		msgType = 2: active query info only
 	*/
 	void serialize(char* msg, int msgType =0);
-	int extract(char * msg); //extract the node info from the msg;
 	int set_capacity(int class_id, double capacity); //class_id starts from 0;
 	int set_capacity_usage(int class_id, double capacity_usage);
 	int set_local_priority(int class_id, double priority);

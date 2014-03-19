@@ -451,3 +451,65 @@ int FileSource::computeOffsets ()
 streampos FileSource::getCurPos(){
 	return input.tellg();
 }
+Timestamp FileSource::startDataReading(streampos curPos, bool noseek){
+	//go to the current pos told by the source node
+	if(!noseek)
+		input.seekg(curPos);
+	else curPos = input.tellg();
+
+	unsigned int len = tupleLen;
+	int rc;
+
+	// If there is a line parse it into a tuple & return
+	if (input.good ())
+	{
+		input.getline (lineBuffer, MAX_LINE_SIZE);
+
+		if (emptyLine (lineBuffer)) { //invalid position, no data seen
+			//read the next line
+			return startDataReading(curPos, true);
+		}
+		else
+		{
+			if ((rc = parseTuple (lineBuffer)) != 0)
+			{
+			  printf("Err: parsing a Tuple\n");
+			  return rc;
+			}
+
+			if(lineBuffer[0]!='i')    //if not first line
+			{
+				unsigned long long int Ts;
+				char tsstr[15];
+				int i =0;
+				while(i<len && lineBuffer[i]!=',' && lineBuffer[i]!='\0')
+				{
+					   tsstr [i] = lineBuffer[i];
+				   i++;
+				}
+				tsstr[i]='\0';
+				//printf("got TS = %s\n", tsstr);
+				Ts = atoi(tsstr);
+				//printf("converted TS = %d\n", Ts);
+
+				//got the TS to send to source node, now back to the starting position
+				input.seekg(curPos);
+				return Ts;
+			 }
+			else{ //first line, read the next line
+				return startDataReading(curPos, true);
+			}
+		}
+	}
+
+	// EOF
+	else if (input.eof ()) {
+		return 0;
+	}
+
+	// Some error
+	else {
+		ASSERT (input.bad());
+		return 0;
+	}
+}

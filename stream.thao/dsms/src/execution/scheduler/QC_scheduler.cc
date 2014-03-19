@@ -145,7 +145,7 @@ int QCScheduler::run (long long int numTimeUnits) {
 
 	//initialize a communication object  to communicate to the global coordinator
 	Node_Info *node_info = new Node_Info(this->n_query_classes);
-	Communicator* comm = new Communicator("paros.cs.pitt.edu",8001,node_info);
+	Communicator* comm = new Communicator("localhost",8001,node_info);
 	comm->mainScheduler = this;
 	//set the initial list of active queries
 	updateActiveQueriesList(comm);
@@ -587,3 +587,12 @@ void QCScheduler::getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,str
 		loadMgrs[i]->getSourceFilePos(queryIDs,sourceFilePos);
 	}
 };
+
+Operator* QCScheduler::getSourceFromID(int sourceID){
+	for(int i=0; i<this->n_query_classes; i++){
+		Operator* src = scheds[i]->getSourceFromID(sourceID);
+		if(src!=0)
+			return src;
+	}
+	return 0;
+}

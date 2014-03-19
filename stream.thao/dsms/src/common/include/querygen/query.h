@@ -167,6 +167,8 @@ namespace Semantic {
 	 */
 	struct Query {
 
+		///added by Thao Pham: is the query active or not
+		bool b_active;
 		/// Type of the query 
 		QueryType kind;
 		

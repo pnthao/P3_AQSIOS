@@ -58,6 +58,9 @@ public:
 	
 	//run for timeSlice (maximum number of tuples processed in a scheduling cycle)
 	int run (TimeSlice timeSlice); 
+	//load manager, by Thao Pham
+	int run_with_shedder (TimeSlice timeSlice);
+	//end of load manager, by Thao Pham
 };
 }
 #endif /*_HEAVYWEIGHT_DROP_*/

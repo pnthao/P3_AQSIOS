@@ -40,6 +40,8 @@ namespace Execution {
 		//get the list of file pos of the sources corresponding to a list of query ID,
 		//the related schedulers is expected to provide an override of this method
 		virtual void getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,streampos> &sourceFilePos){};
+		//find the source operator of a specific ID
+		virtual Operator* getSourceFromID(int sourceID){return 0;};
 
 		/**
 		 * Add a new operator to schedule

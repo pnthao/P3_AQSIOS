@@ -9,6 +9,10 @@
 #include "common/constants.h"
 #endif
 
+#ifndef _TYPES_
+#include "common/types.h"
+#endif
+
 #ifndef _CPP_QUEUE_
 #include <queue>
 #endif
@@ -70,6 +74,7 @@ namespace Client {
 		int loadSourceData();
 		//ArmaDiLos
 		virtual streampos getCurPos();
+		virtual Timestamp startDataReading(std::streampos curPos, bool noseek = false);
 
 		//end of part 2 added by Thao Pham to load all source data to memory
 

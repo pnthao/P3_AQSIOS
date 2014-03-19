@@ -725,3 +725,6 @@ int StreamSource::run_with_shedder (TimeSlice timeSlice)
 std::streampos StreamSource::getCurPos(){
 	return source->getCurPos();
 }
+Timestamp StreamSource::startDataReading(std::streampos curPos){
+	return source->startDataReading(curPos);
+}

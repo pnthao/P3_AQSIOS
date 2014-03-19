@@ -97,6 +97,11 @@ namespace Execution {
 		 */
 		bool steadySystem ();	
 
+		//armadilos, by Thao Pham
+		virtual Operator* getSourceFromID(int sourceID);
+
+		//end of armaDILoS, by Thao Pham
+
 	};
 }
 

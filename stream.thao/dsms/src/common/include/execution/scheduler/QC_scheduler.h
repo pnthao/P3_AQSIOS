@@ -9,8 +9,22 @@
 #include "execution/scheduler/QCHR_scheduler.h"
 #endif
 
+#ifndef COMMUNICATOR_H_
+#include "execution/communicator/communicator.h"
+#endif
+
+#ifndef NODE_INFO_H_
+#include "execution/communicator/node_info.h"
+#endif
+
+#ifndef _OPERATOR_
+#include "execution/operator/operator.h"
+#endif
+
 
 #include <vector>
+#include <set>
+#include<map>
 
 namespace Execution {
 	class QCScheduler : public Scheduler {
@@ -19,7 +33,7 @@ namespace Execution {
 		// Schedulers that we are scheduling
 		std::vector <QCHRScheduler *> scheds;
 
-		//qouta vector 
+		//quota vector 
 		std::vector <int> quota;
 		
 		bool bStop;
@@ -61,13 +75,11 @@ namespace Execution {
 		 */
 		void setSteadyState();
 		
-		/*//load managing, by Thao Pham
-		int count_loadManagementCycle;
-		void adjustPriority(int k, double amount);
-		double getCurrentPriority(int k);
-		void ResourceBalancing();
-		
-		//end of load managing, by Thao Pham*/
+		// amardilos, by Thao Pham
+		void updateNodeInfo(Communicator* comm);
+		void updateActiveQueriesList(Communicator *comm);
+		virtual void getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,streampos> &sourceFilePos);
+
   };
 }
 

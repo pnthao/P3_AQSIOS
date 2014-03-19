@@ -10,7 +10,7 @@
 #include "common/constants.h"
 #endif
 
-
+#include <stdio.h>
 
 //end of part 1 of HR implementation by LAM
 
@@ -92,9 +92,14 @@ namespace Execution {
 		//also used by the output operator to calculate response time 
 		unsigned long long int system_start_time;
 
+		//added by Thao Pham: keep track of the system start time in real time :
+		unsigned long long int system_start_CPUtime;
 		// a variable used to store the length of 
+
 		// a time unit
 		int time_unit;
+		//time unit to interpret the input timestamp
+		unsigned long int input_rate_time_unit;
 		
 		//end of part 1 of response time calculation by LAM
 		
@@ -243,18 +248,67 @@ namespace Execution {
 		virtual int readyToExecute()= 0;
 		//end of part 1 of HR with ready by LAM
 		
+		//query placement by Thao Pham
+		bool b_active;
+		//end of query placement by Thao Pham
+
 		//load managing, by Thao Pham
-		
+		virtual int run_with_shedder (TimeSlice timeSlice)=0;
+		bool isShedder;
+		double input_load; //when isShedder is true, this operator is not a source load and therefore its input load is the input rate at the corresponding source * (product of all preceding ops)
+//	    int run_with_shedder (TimeSlice timeSlice);
+		int drop_percent;
 		/*snapshot local cost per tuples. As opposed to the local_cost_per_tuple which applies
 		 * some statistical methods to calculate a stable average cost and eliminate outlier
 		 * this one captures the true average cost per tuple for the current short period
 		 * and is to be used together with the "stable" one to manage system load
 		 */
 		 
+		/*load coefficient, actual load caused by this input
+				 * is computed as <input rate>*<load coefficient>
+				 * is calculated based on operators' "stable" cost per tuple
+				 */
+		double loadCoefficient;
+
+		/*snapshot load coefficient, which is coefficient calculated based on operators'
+		 * "snapshot, short-term" cost, refer to operator.h for more explanation
+		 */
+		double snapshot_loadCoefficient;
+		//
+
+		//effective coefficient: which is the coefficient calculated based on operators'
+		//costs when the the system is under heavy load. This is used to calculate the amount of load to shed
+		//since this is the expected load coefficient of the input after shedding is applied
+
+		double effective_loadCoefficient;
+
 		double snapshot_local_cost_per_tuple;
 		
 		double effective_cost;
 		
+		//load managing, by Thao Pham
+		int setLoadCoefficient(double coefficient, double snapshot_coefficient, double effective_coefficient)
+		{
+			this->loadCoefficient = coefficient;
+			this->snapshot_loadCoefficient = snapshot_coefficient;
+			this->effective_loadCoefficient = effective_coefficient;
+			return 0;
+		}
+		int getLoad(double& load, double& effective_load, double &source_load)
+		{
+			/*if(isShedder==false) {//real source op
+				load = this->loadCoefficient * ((StreamSource*)this)->inputRate* (100.0-(double)this->drop_percent)/100.0;
+				effective_load = effective_loadCoefficient*((StreamSource*)this)->inputRate*(100.0-(double)this->drop_percent)/100.0;
+				source_load = this->effective_cost*((StreamSource*)this)->inputRate*(100.0-(double)this->drop_percent)/100.0;
+			}
+			else {*/
+			load = this->loadCoefficient * this->input_load* (100.0-(double)this->drop_percent)/100.0;
+			effective_load = effective_loadCoefficient*input_load*(100.0-(double)this->drop_percent)/100.0;
+			source_load = this->effective_cost*input_load*(100.0-(double)this->drop_percent)/100.0;
+			//printf ("\n shedder get load \n");
+			return 0;
+		}
+
 		int setHeavilyLoaddedCost()
 		{
 			if(this->effective_cost > 0)
@@ -311,7 +365,10 @@ double ctrl_load_coef;
 		//also used by the output operator to calculate response time 
 		unsigned long long int system_start_time;
 		
+		//added by Thao Pham: keep track of the system start time in real time :
+		unsigned long long int system_start_CPUtime;
 		// a variable used to store the length of 
+
 		// a time unit
 		int time_unit;
 		//end of part 2 of response time calculation by LAM 
@@ -449,6 +506,28 @@ double ctrl_load_coef;
 		//end of part 1 of HR with ready by LAM
 		
 		//load managing, by Thao Pham
+
+		bool isShedder;
+		double input_load; //when isShedder is true, this operator is not a source load and therefore its input load is the input rate at the corresponding source * (product of all preceding ops)
+		//virtual int run_with_shedder (TimeSlice timeSlice) = 0;
+		int drop_percent;
+		/*load coefficient, actual load caused by this input
+		 * is computed as <input rate>*<load coefficient>
+		 * is calculated based on operators' "stable" cost per tuple
+		 */
+		double loadCoefficient;
+
+		/*snapshot load coefficient, which is coefficient calculated based on operators'
+		 * "snapshot, short-term" cost, refer to operator.h for more explanation
+		 */
+		double snapshot_loadCoefficient;
+		//
+
+		//effective coefficient: which is the coefficient calculated based on operators'
+		//costs when the the system is under heavy load. This is used to calculate the amount of load to shed
+		//since this is the expected load coefficient of the input after shedding is applied
+
+		double effective_loadCoefficient;
 		/*snapshot local cost per tuples. As opposed to the local_cost_per_tuple which applies
 		 * some statistical methods to calculate a stable average cost and eliminate outlier
 		 * this one captures the true average cost per tuple for the current short period
@@ -459,6 +538,29 @@ double ctrl_load_coef;
 		
 		double effective_cost;
 		
+		//load managing, by Thao Pham
+		int setLoadCoefficient(double coefficient, double snapshot_coefficient, double effective_coefficient)
+		{
+			this->loadCoefficient = coefficient;
+			this->snapshot_loadCoefficient = snapshot_coefficient;
+			this->effective_loadCoefficient = effective_coefficient;
+			return 0;
+		}
+		int getLoad(double& load, double& effective_load, double &source_load)
+		{
+			/*if(isShedder==false) {//real source op
+				load = this->loadCoefficient * ((StreamSource*)this)->inputRate* (100.0-(double)this->drop_percent)/100.0;
+				effective_load = effective_loadCoefficient*((StreamSource*)this)->inputRate*(100.0-(double)this->drop_percent)/100.0;
+				source_load = this->effective_cost*((StreamSource*)this)->inputRate*(100.0-(double)this->drop_percent)/100.0;
+			}
+			else {*/
+			load = this->loadCoefficient * this->input_load* (100.0-(double)this->drop_percent)/100.0;
+			effective_load = effective_loadCoefficient*input_load*(100.0-(double)this->drop_percent)/100.0;
+			source_load = this->effective_cost*input_load*(100.0-(double)this->drop_percent)/100.0;
+
+			return 0;
+		}
+
 		int setHeavilyLoaddedCost()
 		{
 			if(this->effective_cost > 0)

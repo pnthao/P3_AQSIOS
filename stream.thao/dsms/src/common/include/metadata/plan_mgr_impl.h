@@ -304,7 +304,9 @@ namespace Metadata {
 		
 
 		int initScheduler (Execution::Scheduler *sched);
-		
+		//to simulate the case input tuples are read from main memory
+
+		int loadAllInputs();
 		//load manager, by Thao Pham
 		
 		int initLoadManager(Execution::LoadManager **loadMgrs);
@@ -366,6 +368,9 @@ namespace Metadata {
 		int insertDropOps();
 		//end of operators, by Thao Pham
 		
+		//query placement, by Thao Pham
+		void setActive(Physical::Operator* phyOp);
+		//end of query placement by Thao Pham
 
 #ifdef _SYS_STR_
 		

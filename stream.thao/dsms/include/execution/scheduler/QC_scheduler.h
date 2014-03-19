@@ -17,6 +17,11 @@
 #include "execution/communicator/node_info.h"
 #endif
 
+#ifndef _OPERATOR_
+#include "execution/operator/operator.h"
+#endif
+
+
 #include <vector>
 #include <set>
 #include<map>
@@ -74,6 +79,7 @@ namespace Execution {
 		void updateNodeInfo(Communicator* comm);
 		void updateActiveQueriesList(Communicator *comm);
 		virtual void getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,streampos> &sourceFilePos);
+		virtual Operator* getSourceFromID(int sourceID);
 
   };
 }

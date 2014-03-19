@@ -63,6 +63,7 @@ typedef struct node {
 		// select-from-where block or an binary operation (union, except)
 		// with an optional relation to stream operator
 		struct {
+			bool b_active; //added by Thao Pham to specify initial query placement at the node
 			struct node *sfw_block;
 			struct node *bin_op;
 			struct node *reltostr_op;
@@ -207,10 +208,10 @@ NODE *prepend(NODE *n, NODE *list);
 //----------------------------------------------------------------------
 
 // CONT_QUERY with a select from where block
-NODE *sfw_cont_query_node(NODE *sfw_block, NODE *rel2str_op);
+NODE *sfw_cont_query_node(bool active, NODE *sfw_block, NODE *rel2str_op);
 
 // CONT_QUERY with a binary operator
-NODE *bin_cont_query_node(NODE *bin_op, NODE *rel2str_op);
+NODE *bin_cont_query_node(bool active, NODE *bin_op, NODE *rel2str_op);
 
 // SFW_BLOCK
 NODE *sfw_block_node(NODE *select_clause, NODE *rel_list,

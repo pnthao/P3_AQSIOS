@@ -122,7 +122,10 @@ namespace Execution {
 		 * true when the statistics have changed and false otherwise
 		 */ 
 		bool calculateLocalStats();
-		
+		//load manager, by Thao Pham
+		int run_with_shedder (TimeSlice timeSlice);
+		//end of load manager, by Thao Pham
+
 		/** this method is used in order to calculate the priority
 		 * of the operator. This is used in order to assign the priorities
 		 * used by the scheduler to schedule operators.
@@ -160,15 +163,30 @@ namespace Execution {
 		 */
 		int num_tuples_rt;
 		
+		/*previous avg response time, used to compute the slope*/
+		double pre_avg_responsetime;
+
+		/*previous ts when computing the avg response time, used to compute the slope*/
+		unsigned long long int pre_rt_timestamp;
+
+		/*timestamp of the first and the last tuples in the current batch of tuples to calculate the average response time*/
+		unsigned long long int rt_first_ts;
+		unsigned long long int rt_last_ts;
+
+		/*current slope of the response time*/
+		double rt_slope;
+
 		/*compute response time based on statistics collects during the previous period
 		 * and reset the response time calculation cycle */
 		bool computeAvgResponseTime();
 		
 		/*check if accummulated delay observed?*/
 		bool isAbnormalResponseTimeObserved();
-		bool isCriticallyAbnormalResponseTimeObserved(double factor);
+		bool isCriticallyAbnormalResponseTimeObserved(double gap);
+		bool isDecreasing(double gap);
+		bool isIncreasing(double gap);
 		bool isAccummulatedDelayObserved(double systemCapacityExpandingFactor);
-		bool isSignificantlyBelowTargetObserved(double factor);
+		bool isSignificantlyBelowTargetObserved(double gap);
 		//end of avg response time calculation, by Thao Pham 
 		
 	};

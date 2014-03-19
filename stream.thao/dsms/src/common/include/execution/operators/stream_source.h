@@ -98,28 +98,10 @@ namespace Execution {
 		
 		//input rate - number of tuples/ time unit
 		double inputRate;
-		unsigned long int input_rate_time_unit;
 		
-		/*load coefficient, actual load caused by this input 
-		 * is computed as <input rate>*<load coefficient>
-		 * is calculated based on operators' "stable" cost per tuple 
-		 */
-		double loadCoefficient;
-		
-		/*snapshot load coefficient, which is coefficient calculated based on operators' 
-		 * "snapshot, short-term" cost, refer to operator.h for more explanation
-		 */
-		double snapshot_loadCoefficient;
-		//
-		
-		//effective coefficient: which is the coefficient calculated based on operators'
-		//costs when the the system is under heavy load. This is used to calculate the amount of load to shed
-		//since this is the expected load coefficient of the input after shedding is applied
-		
-		double effective_loadCoefficient;
-		
-		//for testing with purdue's load shedder only, making this drop-source
-		unsigned int drop_percent;
+
+		//making this drop-source
+		//unsigned int drop_percent;
 		int dropCount;
 		int tupleCount;
 		//end of load managing, by Thao Pham
@@ -132,6 +114,9 @@ namespace Execution {
 		int initialize ();
 		
 		int run (TimeSlice timeSlice);
+		//load manager, by Thao Pham
+		int run_with_shedder (TimeSlice timeSlice);
+		//end of load manager, by Thao Pham
 		
 		//HR implementation by Lory Al Moakar
 		/**
@@ -155,7 +140,7 @@ namespace Execution {
 		
 		//load managing, by Thao Pham
 		
-		int setLoadCoefficient(double coefficient, double snapshot_coefficient, double effective_coefficient);
+		//int setLoadCoefficient(double coefficient, double snapshot_coefficient, double effective_coefficient);
 		
 		//get the load of the input, i.e, <input rate>*<load coefficient>
 		int getLoad(double& load, double& effective_load, double &source_load);
@@ -182,6 +167,9 @@ namespace Execution {
 		 *The variables is reset whenever tuplecount = 100  
 		 */
 
+		//to load all input data to memory
+		int loadAllInput();
+
 #ifdef _CTRL_LOAD_MANAGE_		
 
 		std::queue<unsigned long long int> drop_info_queue;
@@ -201,7 +189,8 @@ namespace Execution {
 		unsigned long long int ctrl_checkpoint_ts;
 		
 #endif //_CTRL_LOAD_MANAGE_
-
+		//ArmaDILoS
+		std::streampos getCurPos();
 		//end of load managing, by Thao Pham
 	};
 }

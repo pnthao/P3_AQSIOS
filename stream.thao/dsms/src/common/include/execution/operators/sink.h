@@ -49,6 +49,9 @@ namespace Execution {
 		int setInputQueue (Queue *inputQueue);
 		int setInStore (StorageAlloc *store);
 		int run (TimeSlice timeSlice);
+		//load manager, by Thao Pham
+		int run_with_shedder (TimeSlice timeSlice);
+		//end of load manager, by Thao Pham
 		//HR implementation by Lory Al Moakar
 		/**
 		 * This method is used in order to calculate the local 

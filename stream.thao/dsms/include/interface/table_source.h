@@ -1,5 +1,10 @@
 #ifndef _TABLE_SOURCE_
 #define _TABLE_SOURCE_
+
+#ifndef _TYPES_
+#include "common/types.h"
+#endif
+
 #include<iostream>
 using namespace std;
 namespace Interface {
@@ -86,6 +91,7 @@ namespace Interface {
 
 		//for ArmaDilos
 		virtual streampos getCurPos() = 0;
+		virtual Timestamp startDataReading(std::streampos curPos, bool noseek = false) = 0;
 
 		//end of part 1 added by Thao Pham
 		/**

@@ -118,6 +118,7 @@ namespace Metadata {
 		 */
 		
 		virtual int optimize_plan () = 0;
+		virtual int insertDropOps () =0;
 
 		/**
 		 * This method is called after the optimize_plan() method.
@@ -154,6 +155,7 @@ namespace Metadata {
 		
 		//load manager, by Thao Pham
 		virtual int initLoadManager(Execution::LoadManager ** loadMrgs) = 0;
+		virtual int loadAllInputs()=0;
 		//end of load manager, by Thao Pham
 		/**
 		 * Factory method to construct a new plan manager. 
@@ -174,6 +176,11 @@ namespace Metadata {
 
 		//end of Query Class Scheduling by LAM
 		
+		//query placement by Thao Pham
+
+		bool b_active;
+		//end of query placement by Thao Pham
+
 #ifdef _DM_
 		/**
 		 * (Debug routine) 

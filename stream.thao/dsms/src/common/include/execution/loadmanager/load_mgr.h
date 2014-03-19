@@ -32,14 +32,18 @@
 #ifndef _PHY_OP_
 #include "metadata/phy_op.h"
 #endif
+#include<iostream>
+#include<set>
+#include <map>
 
-
+using namespace std;
 namespace Execution {
 	
 	class Drop;
 	class LoadManager {
 	public:
-	
+		LoadManager();
+		virtual ~LoadManager();
 		//Array of candidate drop operators to be considered for shedding task
 		Physical::Operator* drops[MAX_OPS_PER_TYPE];
 		// Number of drop operators in the candidate list
@@ -85,7 +89,7 @@ namespace Execution {
 		 * This method is to be called recursively.
 		 */
 		 
-		 int computeLoadCoefficient (Physical::Operator *op, double preSel, double source_rate, double &coef, double& cur_coef, double &effective_coef);
+		 int computeLoadCoefficient (Physical::Operator *op, double source_rate, double preSel, double preCoef,double &coef, double& cur_coef, double &effective_coef);
 	
 		 
 		 /*record that some (2,3?) previous cycle has abnormal costs, which may result in an significant
@@ -103,12 +107,6 @@ namespace Execution {
 		   
 		   //the stable heavily-loadded-cost is available?
 		   bool effective_cost_available; 
-		   
-		 
-		    
-		  
-		LoadManager();		
-		virtual ~LoadManager();
 		
 		//for experiments only, this file store the drop percentage calculated in each cycle
 		FILE * sheddingLogFile ;
@@ -142,7 +140,19 @@ namespace Execution {
 		double critical_above_factor;
 		double critical_below_factor;
 		
+		bool is_first_increasing;
+		bool is_first_decreasing;
+
+		/*when total load cannot be adjusted based on the estimated capacity (because there is disagreement),
+		 * these are the amounts that is used to add/remove shedding.
+		 * This amount is increased every time the same decision is made in the next cycle.
+		 */
+		int add_amount;
+		int remove_amount;
 		
+		int add_times;
+		int remove_times;
+
 		/**
 		 * Add a (candidate) drop operator to the list of drops that the load manager is keeping
 		 */
@@ -260,11 +270,18 @@ namespace Execution {
 		//load manager - scheduler synergy
 		double avg_capacity_usage; //percentage of capacity usage
 		int cycle_count; //count the number of load management cycles since the last capacity tracking reset
+		//double headroom_temp;
 		void resetCapacityUsageTracking(); 
 		void updateAvgCapacityUsage(double totalLoad);
+		//reset the value of query load stored in the  (physical) output operator
+		void updateAvgQueryLoad();
 		
+		//ArmaDiLos
+		void getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,streampos> &sourceFilePos);
+		void findSource(Physical::Operator* op, set<Operator*> &relatedSource);
+
 #endif //_CTRL_LOAD_MANAGE_	    
-		
+
 	
 	};
 }

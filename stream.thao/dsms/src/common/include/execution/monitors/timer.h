@@ -73,6 +73,11 @@ namespace Monitor {
 		 */
 		unsigned long long int getTime();
 		//end of response time calculation by LAM
+
+		//realtime tracking (for input rate and possibly response time, by Thao Pham
+		unsigned long long int getCPUTime();
+
+		//end of realtime tracking by Thao Pham
 	};
 }
 

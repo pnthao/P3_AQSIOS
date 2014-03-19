@@ -191,6 +191,9 @@ namespace Execution {
 #endif //_CTRL_LOAD_MANAGE_
 		//ArmaDILoS
 		std::streampos getCurPos();
+		//when a node serves as destination in a migration, the source start reading from the source file at the specific position
+		//and return the timestamp of the first tuple it read
+		Timestamp startDataReading(std::streampos curPos);
 		//end of load managing, by Thao Pham
 	};
 }

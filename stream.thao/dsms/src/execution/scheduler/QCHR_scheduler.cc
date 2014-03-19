@@ -593,6 +593,15 @@ void QCHRScheduler::setSteadyState(){
 	}
 }
 
+//armaDILoS, by Thao Pham
+Operator* QCHRScheduler::getSourceFromID(int sourceID){
+	for(int i=0;i<numSrOps;i++)
+		if(sr_ops[i]->operator_id ==sourceID)
+			return sr_ops[i];
+	return 0;
+
+}
+//end of armaDILoS
 
 //end of Query Class Scheduling by LAM
 

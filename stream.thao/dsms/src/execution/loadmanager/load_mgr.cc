@@ -737,8 +737,9 @@ void LoadManager::updateAvgQueryLoad()
 }
 
 void LoadManager::findSource(Physical::Operator* op, set<Operator*> &relatedSource){
-	if(op->kind==PO_STREAM_SOURCE)
+	if(op->kind==PO_STREAM_SOURCE){
 		relatedSource.insert(op->instOp);
+	}
 	else
 		for(unsigned int i=0;i<op->numInputs;i++)
 			findSource(op->inputs[i],relatedSource);

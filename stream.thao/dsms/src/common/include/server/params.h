@@ -31,7 +31,7 @@ long long int SCHEDULER_TIME;
 static const long long int SCHEDULER_TIME_DEFAULT = 5000000 * 100;
 
 /// The cpu speed MHz
-int CPU_SPEED;
+unsigned int CPU_SPEED;
 
 static const int CPU_SPEED_DEFAULT = 2000; // 2000 MHz
 

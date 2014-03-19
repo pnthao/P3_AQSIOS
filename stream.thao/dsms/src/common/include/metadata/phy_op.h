@@ -186,6 +186,11 @@ namespace Physical {
 	  
 		  //end of Query Class Scheduling by LAM
 		
+	 	 //Query placement by Thao Pham
+	 	 //the operator is active if it is running at the current node
+	 	 bool b_active;
+	 	 //end of query placement by Thao Pham
+
 		/// next & prev pointers to arrange the operators as a linked list
 		/// for resource management purposes
 		Operator *next;
@@ -258,6 +263,9 @@ namespace Physical {
 			struct {
 				unsigned int outputId; // [[ Explanation ]]
 				unsigned int queryId;
+				double queryLoad; //the actual query load of the query (after shedding) in the current load management cycle
+				double avgQueryLoad; //the capacity usage of the query (before any shedding) over several load management cycle
+				int cycleCount;
 			} OUTPUT;
 			
 			struct {
