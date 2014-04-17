@@ -153,6 +153,9 @@ namespace Execution {
 		//HR with ready by Lory Al Moakar
 		int readyToExecute();
 		//end of part 1 of HR with ready by LAM
+
+		//TODO: ArmaDILoS implementation needed for this operator
+
 	private:
 		int handleLeftPlus (Element element);
 		int handleLeftMinus (Element element);

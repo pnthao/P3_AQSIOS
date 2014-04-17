@@ -7,6 +7,10 @@
 #include "execution/synopses/rel_syn_impl.h"
 #endif
 
+#ifndef _HASH_INDEX_
+#include "execution/indexes/hash_index.h"
+#endif
+
 using namespace Execution;
 
 RelationSynopsisImpl::RelationSynopsisImpl (unsigned int _id,
@@ -189,4 +193,34 @@ int RelationSynopsisImpl::releaseScan (unsigned int scanId, TupleIterator *iter)
 	}
 	
 	return rc;
+}
+void RelationSynopsisImpl::clearSyn(){
+	for(int i=0;i<numIndexes;i++){
+		int numOfBucks = ((HashIndex*)indexes[i])->getNumBucks();
+		for(Hash h=0;h<numOfBucks;h++)
+		{
+			Tuple t = ((HashIndex*)indexes[i])->delFirst(h);
+			while(t){
+				store->deleteTuple_r(t,stubId);
+				t = ((HashIndex*)indexes[i])->delFirst(h);
+			}
+
+		}
+	}
+
+}
+void RelationSynopsisImpl::clearSyn(StorageAlloc *tupleStore){
+	for(int i=0;i<numIndexes;i++){
+		int numOfBucks = ((HashIndex*)indexes[i])->getNumBucks();
+		for(Hash h=0;h<numOfBucks;h++)
+		{
+			Tuple t = ((HashIndex*)indexes[i])->delFirst(h);
+			while(t){
+				store->deleteTuple_r(t,stubId);
+				t = ((HashIndex*)indexes[i])->delFirst(h);
+				tupleStore->decrRef(t);
+			}
+
+		}
+	}
 }

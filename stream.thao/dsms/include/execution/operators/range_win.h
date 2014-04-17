@@ -86,10 +86,17 @@ namespace Execution {
 		// end of part 1 of HR implementation by LAM
 		//HR with ready by Lory Al Moakar
 		int readyToExecute();
-		//end of part 1 of HR with ready by LAM		
+		//end of part 1 of HR with ready by LAM
+		//ArmaDILoS, by Thao Pham
+		int run_in_stop_preparing(TimeSlice timeSlice);
+		void deactivate();
+
+				//end of ArmaDILoS
 	private:
 		int clearStall();
 		int expireTuples(Timestamp expTs);
+		int expireTuplesInStopPreparing(Timestamp expTs);
+		int clearStallInStopPreparing();
 	};
 }
 #endif

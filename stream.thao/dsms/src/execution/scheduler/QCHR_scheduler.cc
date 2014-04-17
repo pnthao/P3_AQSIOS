@@ -122,7 +122,7 @@ int QCHRScheduler::run (long long int numTimeUnits) {
 			int op_index = 0;
 			int source_mode = 0;
 			//while the current op is not ready
-			while ( ops[op_index]->b_active==false || ops[op_index] ->readyToExecute() <= 0 ) {
+			while ( ops[op_index]->status==INACTIVE || ops[op_index] ->readyToExecute() <= 0 ) {
 				++op_index;
 				++ n_not_ready;
 				//none of the operators is ready to execute
@@ -146,7 +146,7 @@ int QCHRScheduler::run (long long int numTimeUnits) {
 				++n_in_sr_mode;
 				if ( n_in_sr_mode == 2 ) return 0;
 				for ( int i = 0; i < numSrOps; i++ ) {
-					if(sr_ops[i]->b_active){
+					if(sr_ops[i]->status!=INACTIVE){
 						if(sr_ops[i]->isShedder==true){
 							if ((rc = sr_ops[i]->run_with_shedder(timeSlice)) != 0)
 								return rc;
@@ -209,7 +209,7 @@ int QCHRScheduler::run (long long int numTimeUnits) {
 			int source_mode = 0;
 			//fprintf(stderr,"before loop %d", numOps);
 			//while the current op is not ready
-			while (ops[op_index]->b_active==false || ops[op_index] ->readyToExecute() <= 0 ) {
+			while (ops[op_index]->status == INACTIVE || ops[op_index] ->readyToExecute() <= 0 ) {
 				++op_index;
 				++ n_not_ready;
 				//fprintf(stderr,"op index is %d\t",op_index);
@@ -234,7 +234,7 @@ int QCHRScheduler::run (long long int numTimeUnits) {
 				++n_in_sr_mode;
 				if ( n_in_sr_mode == 2 ) return 0;
 				for ( int i = 0; i < numSrOps; i++ ) {
-					if(sr_ops[i]->b_active){
+					if(sr_ops[i]->status!=INACTIVE){
 
 						if(sr_ops[i]->isShedder==true){
 							if ((rc = sr_ops[i]->run_with_shedder(timeSlice)) != 0)
@@ -594,13 +594,7 @@ void QCHRScheduler::setSteadyState(){
 }
 
 //armaDILoS, by Thao Pham
-Operator* QCHRScheduler::getSourceFromID(int sourceID){
-	for(int i=0;i<numSrOps;i++)
-		if(sr_ops[i]->operator_id ==sourceID)
-			return sr_ops[i];
-	return 0;
 
-}
 //end of armaDILoS
 
 //end of Query Class Scheduling by LAM

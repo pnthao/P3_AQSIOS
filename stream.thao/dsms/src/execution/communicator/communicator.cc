@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <sstream>
 #include <iostream>
+#include<assert.h>
 //#include <arpa/inet.h>
 using namespace std;
 using namespace Execution;
@@ -465,17 +466,17 @@ void Communicator::handleMigrationAsSource(MigrationInfo &migrationInfo)
 		ss << *it <<",";
 	}
 	ss<<"E";
-	sendMessage(sockfd_migrationDest, ss.str().c_str());
 
-	std::map<Operator*, streampos> sources;
+	//send two concatenated messages
+
+	std::map<Physical::Operator*, streampos> sources;
 	mainScheduler->getSourceFilePos(migrationInfo.queryIDs,sources);
 
-	ss.str("");
 
 	ss<<"SP,"; //sources file position
-	for( map<Operator*, streampos>::iterator si = sources.begin(); si!=sources.end();si++)
+	for( map< Physical::Operator*, streampos>::iterator si = sources.begin(); si!=sources.end();si++)
 	{
-		ss<<(*si).first->operator_id <<"," << (*si).second <<",";
+		ss<<(*si).first->instOp->operator_id <<"," << (*si).second <<",";
 		//TODO: check the operator id of the physical operator and execution operator to make sure they are the same
 		//done: no, they are not the same, but why would this matter, just make sure we are using one of them consistently?
 	}
@@ -485,8 +486,41 @@ void Communicator::handleMigrationAsSource(MigrationInfo &migrationInfo)
 
 	sendMessage(sockfd_migrationDest,ss.str().c_str());
 
-	//TODO: wait to receive msg from destination about first tuple timestamp the sources receives
+	//wait to receive msg from destination about first tuple timestamp the sources receives
 	//for simplicity, the destination will wait until all related sources finish seeking, has the info and send back to the source
+	//format <TS, sourceID1, Ts1, sourceID2, Ts2,...,E>
+	char buf[512];
+	bzero(buf,512);
+	int result = read(sockfd_migrationDest,buf,512);
+	if(result ==0)//the socket is closed from source side{
+		return ;
+
+	char *msg = buf;
+	assert(strncmp(msg,"TS",2)==0);
+	int len = strchr(msg,',') - msg;
+	msg = msg+ len +1;
+
+	ss.str("");
+	ss<<"TS,";
+	//format <TS, sourceID1, Ts1, sourceID2, Ts2,...,E>
+	while(strcmp(msg,"E")!=0){
+		int srcID = strtol(msg,&msg, 10);
+		ss<<srcID<<",";
+		Physical::Operator* src = mainScheduler->getSourceFromID(srcID);
+		msg++;
+		Timestamp ts = strtol(msg, &msg, 10);
+
+		//this turns source or most downstream window operator to START_PREPARING status as well
+		ss<<((StreamSource*)src->instOp)->getStartTupleTS(ts)<<",";
+		msg++;
+
+	}
+	ss<<"E";
+	//test
+	cout<<ss.str()<<endl;
+	sendMessage(sockfd_migrationDest,ss.str().c_str());
+
+
 
 	printf("end migration channel as source \n");
 	close(sockfd_migrationDest);
@@ -494,66 +528,104 @@ void Communicator::handleMigrationAsSource(MigrationInfo &migrationInfo)
 
 void Communicator::handleMigrationAsDest(MigrationInfo &migrationInfo){
 	//start the migration communication
-	cout<<"starting query migration..."<<endl;
-	char buf[256];
+	cout<<"starting query migration as destination..."<<endl;
+	char buf[512];
 
 	//wait for the source to send the list of query to be migrated;
-	bzero(buf,256);
-	int result = read(migrationInfo.sockfd_migration,buf,256);
+	bzero(buf,512);
+	int result = read(migrationInfo.sockfd_migration,buf,512);
 	if(result ==0)//the socket is closed from source side{
 			return ;
 
 	char* msg = buf;
 
-	if(strncmp(msg,"QI",2)==0) //query ID
-	{
-		//format QI,<queryID1>,<queryID2>...,E)
-		 //trim the msg header
-		int len = strchr(msg,',') - msg;
-		msg = msg+ len +1;
-		//list of query IDs
-		set<int> queryIDs;
-		while(strcmp(msg,"E")!=0)//not end of message yet
-		{
-			int queryID = strtol(msg,&msg, 10);
-			queryIDs.insert(queryID);
-			msg++;
-			cout <<queryID<<",";
+	//query ID
+	assert(strncmp(msg,"QI",2)==0); //query ID
 
-		}
+	//format QI,<queryID1>,<queryID2>...,E)
+	 //trim the msg header
+	int len = strchr(msg,',') - msg;
+	msg = msg+ len +1;
+	//list of query IDs
+	set<int> queryIDs;
+	while(strncmp(msg,"E",1)!=0)//not end of message yet
+	{
+		int queryID = strtol(msg,&msg, 10);
+		queryIDs.insert(queryID);
+		msg++;
+		cout <<queryID<<",";
+
 	}
 
-	//wait for the source to send the source file pos //simulate stream source connection
-	bzero(buf,256);
-	result=read(migrationInfo.sockfd_migration, buf, 256);
-	if(result ==0) return;
+
+	//now parse the source file pos //simulate stream source connection
+	msg++; //skip the "E"
+
+	assert(strncmp(msg,"SP",2)==0); //stream source pos
+	//format SP,<streamsource ID>, <filepos>
+	//trim the msg header
+	len = strchr(msg,',') - msg;
+	msg = msg+ len +1;
+	//TODO: read the file pos of each source, tell the sources to seek and get back the timestamp of the first tuple
+	//it can read
+	Physical::Operator* src;
+	int srcID;
+	std::streampos filePos;
+	stringstream ss;
+	ss<<"TS,"; //timestamps of first tuple read by related source;
+	while(strcmp(msg,"E")!=0){
+		srcID = strtol(msg,&msg, 10);
+		ss<<srcID<<",";
+		src = mainScheduler->getSourceFromID(srcID);
+		msg++;
+		filePos = strtol(msg,&msg,10);
+		ss << ((StreamSource*)(src->instOp))->startDataReading(filePos)<<",";
+		msg++;
+	}
+	ss<<"E";
+	cout<<ss.str()<<endl;
+	sendMessage(migrationInfo.sockfd_migration,ss.str().c_str());
+
+
+	////////////////////////////////////
+	//wait to read the start_ts from the source
+	bzero(buf,512);
+	result = read(migrationInfo.sockfd_migration,buf,512);
+	if(result ==0)//the socket is closed from source side{
+		return ;
 
 	msg = buf;
-	if(strncmp(msg,"SP",2)==0) //stream source pos
-	{
-		//format SP,<streamsource ID>, <filepos>
-		//trim the msg header
-		int len = strchr(msg,',') - msg;
-		msg = msg+ len +1;
-		//TODO: read the file pos of each source, tell the sources to seek and get back the timestamp of the first tuple
-		//it can read
-		Operator* src;
-		int srcID;
-		std::streampos filePos;
-		stringstream ss;
-		ss<<"TS,"; //timestamps of first tuple read by related source;
+	assert(strncmp(msg,"TS",2)==0);
+	len = strchr(msg,',') - msg;
+	msg = msg+ len +1;
 
-		while(strcmp(msg,"E")!=0){
-			srcID = strtol(msg,&msg, 10);
-			src = mainScheduler->getSourceFromID(srcID);
-			msg++;
-			filePos = strtol(msg,&msg,10);
-			ss << ((StreamSource*)src)->startDataReading(filePos)<<",";
-			msg++;
-		}
-		ss<<"E";
-		cout<<ss.str()<<endl;
-		//sendMessage(migrationInfo.sockfd_migration,ss.str().c_str());
+	//format <TS, sourceID1, Ts1, sourceID2, Ts2,...,E>
+	while(strcmp(msg,"E")!=0){
+		int srcID = strtol(msg,&msg, 10);
+		Physical::Operator* src = mainScheduler->getSourceFromID(srcID);
+		msg++;
+		Timestamp ts = strtol(msg, &msg, 10);
+
+		((StreamSource*)src->instOp)->setStartTupleTS(ts);
+
+		//now turn active all other ops, and turn start_pending for output ops
+		mainScheduler->onStartTimestampSet(src,queryIDs);
+
+		msg++;
+	}
+
+	//wait for finish ack from source node, each msg contains the query ID;
+	bzero(buf,512);
+	int count =0;
+	while (count < queryIDs.size()){
+		bzero(buf,sizeof(int));
+		result = read(migrationInfo.sockfd_migration,buf,sizeof(int));
+		if(result==0) return; //TODO: later: need to handle this error case properly
+		msg = buf;
+		int queryID = strtol(msg,&msg,10);
+		assert(queryIDs.find(queryID)!=queryIDs.end());
+		count ++;
+		mainScheduler->onSourceCompleted(queryID);
 	}
 
 	cout<<"end migration channel as destination"<<endl;

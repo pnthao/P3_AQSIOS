@@ -605,3 +605,50 @@ int HashIndex::getIntProperty (int property, int& val)
 	return PropertyMonitor::getIntProperty (property, val);
 }
 #endif
+
+void HashIndex::emptyHashTable(){
+	Entry **bucket;
+	Entry *entry;
+	Entry *delEntry;
+	unsigned int count;
+
+	for (Hash h = 0 ; h < numBuckets ; h++) {
+		bucket = getBucket (h);
+
+		entry = *bucket;
+
+		while (entry) {
+			delEntry = entry;
+			entry = entry -> next;
+			freeEntry(delEntry);
+		}
+		numNonEmptyBuckets --;
+
+	}
+}
+
+Tuple HashIndex::delFirst(Hash hashVal){
+
+	Entry  **entryList;
+	Entry   *delEntry;
+	Tuple delTuple;
+
+	// get the bucket for this hash value
+	entryList = getBucket(hashVal);
+
+	if(*entryList){
+		delEntry = *entryList;
+		*entryList = (*entryList)->next;
+		delTuple = delEntry->dataPtr;
+		freeEntry(delEntry);
+		if(*entryList)
+			numNonEmptyBuckets--;
+		return delTuple;
+	}
+	else
+		return 0;
+
+}
+int HashIndex::getNumBucks(){
+	return numBuckets;
+}

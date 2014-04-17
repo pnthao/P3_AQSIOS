@@ -170,6 +170,8 @@ namespace Execution {
 		int readyToExecute();
 		//end of part 1 of HR with ready by LAM		
 
+		//TODO: ArmaDILoS implementation needed for this operator
+
 	private:
 		
 		int clearStall ();

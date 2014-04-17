@@ -165,6 +165,12 @@ namespace Execution {
 		void printDist() const;
 
 		virtual int getIntProperty (int property, int& val);
+		//ArmaDILoS, by Thao Pham
+		void emptyHashTable();
+		//delete the first entry in the bucket that matches hashVal
+		Tuple delFirst(Hash hashVal);
+		int getNumBucks();
+		//end of ArmaDILoS, by Thao Pham
 		
 	private:
 		int computeBucketIndexParams();

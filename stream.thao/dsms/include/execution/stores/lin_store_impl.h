@@ -151,7 +151,9 @@ namespace Execution {
 		int deleteTuple_l (Tuple tuple, unsigned int stubId);
 		int getTuple_l (Tuple *lineage, Tuple &tuple,
 						unsigned int stubId);
-		
+		//ArmaDILoS, by Thao Pham
+		void clearStore(unsigned int stubID);
+		void clearStore(unsigned int stubID, StorageAlloc* tupleStore);
 	private:
 		int allocateMoreSpace ();
 	};

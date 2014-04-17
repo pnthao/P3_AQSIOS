@@ -78,6 +78,11 @@ namespace Execution {
 		 */
 		
 		int getTuple (Tuple *lineage, Tuple &tuple);
+		//ArmaDiLos, by Thao Pham
+		virtual void clearSyn();
+		//clear Syn and call extStore->decref
+		virtual void clearSyn(StorageAlloc* tupleStore);
+		//end of ArmaDiLos
 	};
 }
 

@@ -513,3 +513,4 @@ Timestamp FileSource::startDataReading(streampos curPos, bool noseek){
 		return 0;
 	}
 }
+

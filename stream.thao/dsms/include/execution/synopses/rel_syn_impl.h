@@ -87,6 +87,12 @@ namespace Execution {
 		int deleteTuple (Tuple tuple);
 		int getScan (unsigned int scanId, TupleIterator *&iter);
 		int releaseScan (unsigned int scanId, TupleIterator *iter);
+
+		//armaDiLos, by Thao Pham
+		void clearSyn();
+		//tupleStore might be the same as this->store? I am not quite clear.
+		void clearSyn(StorageAlloc* tupleStore);
+		//end of ArmaDILoS
 	};
 }
 

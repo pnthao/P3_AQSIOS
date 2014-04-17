@@ -2,6 +2,10 @@
 #include "execution/stores/lin_store_impl.h"
 #endif
 
+#ifndef _HASH_INDEX_
+#include "execution/indexes/hash_index.h"
+#endif
+
 using namespace Execution;
 using namespace std;
 
@@ -405,3 +409,76 @@ bool LinStoreIterator::getNext (Tuple& tuple)
 	
 	return true;
 }
+//ArmaDILoS, by Thao Pham
+void LinStoreImpl::clearStore(unsigned int stubID){
+
+	int numOfBucks = ((HashIndex*)linIndex)->getNumBucks();
+	for(Hash h=0;h<numOfBucks;h++)
+	{
+		Tuple t = ((HashIndex*)linIndex)->delFirst(h);
+		while(t){
+
+			MARK_DELETE (t, stubID);
+
+			if (UNUSED(t)) {
+				if (NEXT(t)) {
+					PREV(NEXT(t)) = PREV(t);
+				}
+
+				if (PREV(t)) {
+					NEXT(PREV(t)) = NEXT(t);
+				}
+				else {
+					// Head of the linked list
+					ASSERT (tuples == t);
+					tuples = NEXT(t);
+				}
+		#ifdef _DM_
+				NEXT(t) = 0;
+				PREV(t) = 0;
+		#endif
+			}
+			t = ((HashIndex*)linIndex)->delFirst(h);
+		}
+
+	}
+}
+
+void LinStoreImpl::clearStore(unsigned int stubID, StorageAlloc* tupleStore){
+
+	int numOfBucks = ((HashIndex*)linIndex)->getNumBucks();
+	for(Hash h=0;h<numOfBucks;h++)
+	{
+		Tuple t = ((HashIndex*)linIndex)->delFirst(h);
+		while(t){
+
+			MARK_DELETE (t, stubID);
+
+			if (UNUSED(t)) {
+				if (NEXT(t)) {
+					PREV(NEXT(t)) = PREV(t);
+				}
+
+				if (PREV(t)) {
+					NEXT(PREV(t)) = NEXT(t);
+				}
+				else {
+					// Head of the linked list
+					ASSERT (tuples == t);
+					tuples = NEXT(t);
+				}
+		#ifdef _DM_
+				NEXT(t) = 0;
+				PREV(t) = 0;
+		#endif
+			}
+
+			tupleStore->decrRef(t);
+
+			t = ((HashIndex*)linIndex)->delFirst(h);
+		}
+
+	}
+}
+
+//end of ArmaDILoS

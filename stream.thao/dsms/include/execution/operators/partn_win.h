@@ -129,6 +129,8 @@ namespace Execution {
 		
 	private:
 		int expireOldestTuple (Tuple partn);
+
+		//TODO: implement ArmaDILoS support for partition window here
 	};
 }
 

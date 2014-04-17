@@ -89,6 +89,13 @@ StreamSource::StreamSource (unsigned int _id, std::ostream& _LOG)
 	ctrl_adjusted = true;
 #endif
 	//end of load managing, by Thao Pham
+
+	//ArmaDILoS, by Thao Pham
+
+	startTupleTs = 0;
+	stopTupleTs = 0;
+	pthread_mutex_init(&mutex_startTupleTs, NULL);
+	pthread_mutex_init(&mutex_file_handle,NULL);
 }
 
 StreamSource::~StreamSource() {
@@ -96,6 +103,8 @@ StreamSource::~StreamSource() {
 if(ctrl_input_rates)
 	fclose(ctrl_input_rates);
 #endif	
+pthread_mutex_destroy(&mutex_startTupleTs);
+pthread_mutex_destroy(&mutex_file_handle);
 }
 
 int StreamSource::setOutputQueue (Queue *outputQueue)
@@ -167,6 +176,13 @@ int StreamSource::initialize ()
 int StreamSource::run (TimeSlice timeSlice)
 {
 		
+	if(status==START_PENDING)
+		return run_in_start_pending(timeSlice);
+	if(status ==START_PREPARING)
+		return run_in_start_preparing(timeSlice);
+	if(status == STOP_PREPARING)
+		return run_in_stop_preparing(timeSlice);
+
 	int rc;
 	unsigned int  numElements;
 	char         *inputTuple;
@@ -189,12 +205,12 @@ int StreamSource::run (TimeSlice timeSlice)
 	int n_before = num_tuples_processed;
 	//end of part 1 of local stats computation, by Thao Pham
 	unsigned int e =0;
+
+	//to save time, this mutex is locked at the beginning of this function instead of everytime a tuple is read
+	pthread_mutex_lock(&mutex_file_handle);
+
 	for (e = 0 ; e < numElements ; e++) {
-		
-		/*Monitor::Timer testTime;
-		unsigned long long int time1 = testTime.getTime();
-		unsigned long long int time2 = 0;
-		unsigned long long int time3 = 0;*/
+
 		// We are blocked @ the output queue
 			if (outputQueue -> isFull()) 
 				break;
@@ -219,11 +235,6 @@ int StreamSource::run (TimeSlice timeSlice)
 	
 		// Get the next input tuple
 		
-		/*unsigned long long int a = mytime.getTime();
-		source->skip(1);
-		unsigned long long int b = mytime.getTime();
-		printf("%lld \n", b-a);
-		*/
 		
 		if ((rc = source -> getNext (inputTuple,
 					     inputTupleLen,
@@ -251,81 +262,18 @@ int StreamSource::run (TimeSlice timeSlice)
 		lastInputTs = inputTs;
 		
 		//DROP OR KEEP
-/*
-#ifdef _CTRL_LOAD_MANAGE_
-		
-		//printf("%lld, %lld \n", (ctrl_checkpoint_ts - system_start_time),(unsigned long long int)lastInputTs*time_unit);
-		if(ctrl_adjusted ==false && ((unsigned long long int)lastInputTs*time_unit) > (ctrl_checkpoint_ts - system_start_time))
-		{
-			ctrl_compensation += (ctrl_actual_total_incoming_tuples - ctrl_checkpoint_estimated_total_incoming_tuples);
-			//printf("\n%f", ctrl_compensation);
-			ctrl_adjusted = true;	
-		}
-	
-		
-//		printf("last ts:%lld, eff time: %lld, size: %d\n", (unsigned long long int)lastInputTs*time_unit, effective_time, drop_info_queue.size());
-		if(drop_info_queue.size()>0)
-		{	
-			unsigned long long int effective_time = 0;
-			unsigned long long int drop = 0;
-			//unsigned int drop;
-			
-			effective_time = drop_info_queue.front();
-			
-			//printf("%d:\n",drop_percent);
-			//printf("last ts:%lld, eff time: %lld, size: %d\n", (unsigned long long int)lastInputTs*time_unit, effective_time, drop_info_queue.size());
-			while(((unsigned long long int)lastInputTs*time_unit >= effective_time) && (drop_info_queue.size()>0)) 
-			{	
-				ctrl_compensation += ((double)drop_percent/100.0)*tupleCount - (double)dropCount;
-				dropCount = 0 ;
-				tupleCount = 0;
-				
-				//printf("last ts:%lld, eff time: %lld, size: %d\n", (unsigned long long int)lastInputTs*time_unit, effective_time, drop_info_queue.size());
-				//printf("%d\n", drop_percent);
-				drop_info_queue.pop();
-				drop = drop_info_queue.front();
-				this->drop_percent = (unsigned int)drop;
-				//printf("%d\n\n\n\n\n\n\n",this->drop_percent);
-				drop_info_queue.pop();	
-				
-				effective_time = drop_info_queue.front();// - system_start_time;
-				
-			}
-		}
-#endif
-*/
-		bool drop = 0;
-		//in this case, need to drop to enforce the drop amount set, no choice 
-		//if((100-this->tupleCount+this->dropCount) <= this->drop_percent){
-			//drop = 1;
-		//}
-		//else{
-			/*if we haven't drop enough in this cycle
-			 * flip a coin with probability for drop of dropPercent%
-			 * assume that the probability for a random number in the range 100 to be
-			 * less than dropPercent is dropPercent%
-			 */ 
-			//if(this->dropCount < this->drop_percent){
-				
-				unsigned int r = rand()%100+1; //random number from 0-100
-				if(r <= this->drop_percent){
-					drop = 1;
-				}
-			//}
-		//}
 
+		bool drop = 0;
 		
-		/*//local cost computation, by Thao Pham (selectivity of input is always equals to the drop_percent)
-			// find out the num_tuples_processed so far
-			num_tuples_processed += 1;
-			// end of part 2 of local cost computation, by Thao Pham*/
-		
-		
+		unsigned int r = rand()%100+1; //random number from 0-100
+		if(r <= this->drop_percent){
+			drop = 1;
+		}
+
 		//num_tuples_processed += 1;//if we put it here, we don't count the cost of those dropped
 		
 		if(!drop)
 		{
-			//time2 = testTime.getTime();
 			//local cost computation, by Thao Pham (selectivity of input is always equals to the drop_percent)
 			// find out the num_tuples_processed so far
 			
@@ -392,42 +340,11 @@ int StreamSource::run (TimeSlice timeSlice)
 			outputQueue -> enqueue (Element(E_PLUS, outputTuple, inputTs));
 			lastOutputTs = inputTs;
 	
-			/*//Lottery scheduling by Lory Al Moakar
-			// find out the num_tuples_processed so far
-			num_tuples_processed += e + 1;
-			// find the number of tuples inputted so far
-			n_tuples_inputted = e + 1;
-			// end of part 1 of Lottery scheduling by LAM
-			*/
-			//time3 = testTime.getTime();
 		}
-/*		else //drop
-		{
 
-			this->dropCount ++;	
-#ifdef _CTRL_LOAD_MANAGE_			
-			this->ctrl_out_tuple_count++;
-#endif
-		}
-	*/
-		/*if(this->tupleCount == 99)
-		{
-			this->tupleCount=0;
-			//printf("drop: %d, drop count: %d\n", drop_percent, dropCount);
-			this->dropCount =0;
-		}
-		else
-		{
-			this->tupleCount = this->tupleCount+1;
-		}
-		*/
 		this->tupleCount = this->tupleCount+1;
 		
-		/*unsigned long long int time4 = testTime.getTime();
-		printf("%lld : %lld \n", time4-time1, time3 - time2);*/
-		
 	}
-	//printf("num of tuples read: %d\n", e);
 	
 	// Heartbeat generation: Assert to the operator above that we won't
 	// produce any element with timestamp < lastInputTs
@@ -437,6 +354,8 @@ int StreamSource::run (TimeSlice timeSlice)
 		lastOutputTs = lastInputTs;
 	}
 	
+	pthread_mutex_unlock(&mutex_file_handle);
+
 #ifdef _MONITOR_
 	stopTimer ();
 	logOutTs (lastOutputTs);		
@@ -446,8 +365,6 @@ int StreamSource::run (TimeSlice timeSlice)
 	//get current time	
 	unsigned long long int timeAfterLoop = mytime.getCPUTime();
 	
-	
-	// printf("num of tuples: %d, drop: %d \n", num_tuples_processed-n_before, drop_percent);
 	//calculate time elapsed during execution
 	//add it to local cost
 	if ( num_tuples_processed > n_before )//e >= 1  
@@ -715,7 +632,7 @@ double StreamSource::get_incoming_tuples(unsigned long long int &cur_ts)
 
 #endif //_CTRL_LOAD_MANAGE_
 
-int StreamSource::run_with_shedder (TimeSlice timeSlice)
+int StreamSource::run_with_shedder (TimeSlice timeSlice)//is_shedder is always false for a true source (although a true source is always has embedded shedder)
 {
 	return 0;
 }
@@ -726,5 +643,567 @@ std::streampos StreamSource::getCurPos(){
 	return source->getCurPos();
 }
 Timestamp StreamSource::startDataReading(std::streampos curPos){
-	return source->startDataReading(curPos);
+	Timestamp ts = source->startDataReading(curPos);
+	this->status = START_PENDING;
+	return ts;
+}
+
+int StreamSource::run_in_start_pending(TimeSlice timeSlice)
+{
+
+	int rc;
+	unsigned int  numElements;
+	char         *inputTuple;
+	Timestamp     inputTs;
+	unsigned int  inputTupleLen;
+	Tuple         outputTuple;
+	bool          bHeartbeat;
+
+#ifdef _MONITOR_
+	startTimer ();
+#endif
+
+	numElements = timeSlice;
+
+	int max_delay = 0;
+
+	//local stats computation - not needed for this status
+	/*Monitor::Timer mytime;
+	unsigned long long int timeBeforeLoop = mytime.getCPUTime();
+	int n_before = num_tuples_processed;*/
+	//end of part 1 of local stats computation, by Thao Pham
+	unsigned int e =0;
+	for (e = 0 ; e < numElements ; e++) {
+		//check if the startTupleTS has been set
+		pthread_mutex_lock(&mutex_startTupleTs);
+		if(startTupleTs>0){
+			//switch to "start_preparing" mode:
+			#ifdef _MONITOR_
+				stopTimer ();
+			#endif
+			return run_in_start_preparing(timeSlice-e);
+		}
+
+		pthread_mutex_unlock(&mutex_startTupleTs);
+
+		// Response Time Calculation By Lory Al Moakar
+		//get the current time
+		Monitor::Timer mytime;
+		unsigned long long int curTime = mytime.getTime();
+
+		//calculate time elapsed
+		curTime = curTime - this -> system_start_time;
+
+		//added by Thao Pham : curTime in CPU-time measurement (after switching getTime to read realtime):
+		unsigned long long int curCPUTime = mytime.getCPUTime();
+
+		curCPUTime = curCPUTime - system_start_CPUtime;
+
+		//end of cur real time added by Thao Pham
+
+		//calculate time elapsed in time units
+		unsigned long long int time_elapsed = curTime / time_unit;
+
+		// Get the next input tuple
+
+		if ((rc = source -> getNext (inputTuple,
+					     inputTupleLen,
+					     bHeartbeat,
+					     time_elapsed)) != 0)
+			return rc;
+
+		// We do not have an input tuple yet
+		if (!inputTuple)
+			break;
+
+		// Ignore heartbeats
+		if (bHeartbeat) {
+			LOG << "Heartbeat received" << endl;
+			continue;
+		}
+
+		//add input tuple into a temporary queue
+		char* t = new char[inputTupleLen];
+		memcpy(t,inputTuple,inputTupleLen);
+		pending_tuples.push(t);
+
+		/////////////////////////
+
+		// We should have a progress of time.
+		if (lastInputTs > inputTs) {
+			LOG << "StreamSource: input not in timestamp order" << endl;
+			return -1;
+		}
+
+	}
+#ifdef _MONITOR_
+	stopTimer ();
+#endif
+	return 0;
+}
+
+/////////////////////////
+int StreamSource::run_in_start_preparing(TimeSlice timeSlice)
+{
+
+
+	int rc;
+	unsigned int  numElements;
+	char         *inputTuple;
+	Timestamp     inputTs;
+	unsigned int  inputTupleLen;
+	Tuple         outputTuple;
+	bool          bHeartbeat;
+
+#ifdef _MONITOR_
+	startTimer ();
+#endif
+
+	numElements = timeSlice;
+
+	int max_delay = 0;
+
+	//local stats computation, by Thao Pham
+	Monitor::Timer mytime;
+	unsigned long long int timeBeforeLoop = mytime.getCPUTime();
+	int n_before = num_tuples_processed;
+	//end of part 1 of local stats computation, by Thao Pham
+	unsigned int e =0;
+	for (e = 0 ; e < numElements ; e++) {
+
+		// We are blocked @ the output queue
+			if (outputQueue -> isFull())
+				break;
+
+		// Response Time Calculation By Lory Al Moakar
+		//get the current time
+		Monitor::Timer mytime;
+		unsigned long long int curTime = mytime.getTime();
+
+		//calculate time elapsed
+		curTime = curTime - this -> system_start_time;
+
+		//added by Thao Pham : curTime in CPU-time measurement (after switching getTime to read realtime):
+		unsigned long long int curCPUTime = mytime.getCPUTime();
+
+		curCPUTime = curCPUTime - system_start_CPUtime;
+
+		//end of cur real time added by Thao Pham
+
+		//calculate time elapsed in time units
+		unsigned long long int time_elapsed = curTime / time_unit;
+
+		bool is_from_pending_queue = false;
+		// Get the next input tuple, from the temporary queue instead of the source file
+		if(status==START_PREPARING && pending_tuples.size()>0){
+			// Get the next input tuple, from the temporary queue instead of the source file
+			inputTuple = pending_tuples.front();
+			pending_tuples.pop();
+			is_from_pending_queue = true;
+			bHeartbeat = false;
+			if(pending_tuples.size()==0)
+				status = ACTIVE;
+		}
+
+		else{
+
+			if ((rc = source -> getNext (inputTuple,
+							 inputTupleLen,
+							 bHeartbeat,
+							 time_elapsed)) != 0)
+				return rc;
+
+		}
+
+		// We do not have an input tuple yet
+		if (!inputTuple)
+			break;
+
+		// Get the timestamp: which is the first field
+		memcpy (&inputTs, inputTuple, TIMESTAMP_SIZE);
+		if(inputTs < startTupleTs){
+			if(is_from_pending_queue){
+				delete[] inputTuple;
+				inputTuple = 0;
+			}
+			continue;//skip the tuples
+		}
+		// We should have a progress of time.
+		if (lastInputTs > inputTs) {
+			LOG << "StreamSource: input not in timestamp order" << endl;
+			return -1;
+		}
+
+		//input rate computation, by Thao Pham
+		numOfIncomingTuples ++;
+		//end of input rate computation, by Thao Pham
+		lastInputTs = inputTs;
+
+		//DROP OR KEEP
+
+		bool drop = 0;
+
+		unsigned int r = rand()%100+1; //random number from 0-100
+		if(r <= this->drop_percent){
+			drop = 1;
+		}
+
+		//num_tuples_processed += 1;//if we put it here, we don't count the cost of those dropped
+
+		if(!drop)
+		{
+			//local cost computation, by Thao Pham (selectivity of input is always equals to the drop_percent)
+			// find out the num_tuples_processed so far
+
+			num_tuples_processed += 1;
+
+			// end of part 2 of local cost computation, by Thao Pham
+
+			//HR implementation by Lory Al Moakar
+			int x = time_elapsed - lastInputTs ;
+			if ( x > max_delay )
+			  max_delay = x;
+			// end of part 1 of HR implementation by LAM
+
+			// Ignore heartbeats
+			if (bHeartbeat) {
+				LOG << "Heartbeat received" << endl;
+				continue;
+			}
+
+#ifdef _CTRL_LOAD_MANAGE_
+			for(int i=0;i<numOutputs;i++)
+			{
+				this->outputs[i]->ctrl_num_of_queuing_tuples +=1;
+			}
+			this->ctrl_num_of_queuing_tuples -=1;
+			ctrl_actual_total_incoming_tuples +=1;
+
+#endif //_CTRL_LOAD_MANAGE
+
+
+			// Get the storage for the output tuple
+			if ((rc = storeAlloc -> newTuple (outputTuple)) != 0)
+				return rc;
+
+			// Get the attributes
+			for (unsigned int a = 0 ; a < numAttrs ; a++) {
+				switch (attrs [a].type) {
+				case INT:
+					memcpy (&ICOL(outputTuple, outCols[a]),
+							inputTuple + offsets[a], INT_SIZE);
+					break;
+
+				case FLOAT:
+					memcpy (&FCOL(outputTuple, outCols[a]),
+							inputTuple + offsets[a], FLOAT_SIZE);
+					break;
+
+				case BYTE:
+					BCOL(outputTuple, outCols[a]) = inputTuple[offsets[a]];
+					break;
+
+				case CHAR:
+					strncpy (CCOL(outputTuple, outCols[a]),
+							 inputTuple + offsets[a],
+							 attrs[a].len);
+					break;
+
+				default:
+					// Should not come
+					return -1;
+				}
+			}
+
+			outputQueue -> enqueue (Element(E_PLUS, outputTuple, inputTs));
+			lastOutputTs = inputTs;
+
+		}
+
+		this->tupleCount = this->tupleCount+1;
+		if(is_from_pending_queue){
+			delete[] inputTuple;
+			inputTuple = 0;
+		}
+
+	}
+
+	// Heartbeat generation: Assert to the operator above that we won't
+	// produce any element with timestamp < lastInputTs
+
+	if (!outputQueue -> isFull() && (lastInputTs > lastOutputTs)) {
+		outputQueue -> enqueue (Element::Heartbeat(lastInputTs));
+		lastOutputTs = lastInputTs;
+	}
+
+#ifdef _MONITOR_
+	stopTimer ();
+	logOutTs (lastOutputTs);
+#endif
+
+	//local cost computation, by Thao Pham
+	//get current time
+	unsigned long long int timeAfterLoop = mytime.getCPUTime();
+
+	//calculate time elapsed during execution
+	//add it to local cost
+	if ( num_tuples_processed > n_before )//e >= 1
+	  local_cost += timeAfterLoop - timeBeforeLoop;
+	//printf("%lld\n", local_cost);
+	//end of part 3 of cost computation by Thao Pham
+
+
+	return 0;
+}
+
+/////////////////////////
+void StreamSource::setStartTupleTS(Timestamp start_ts){
+	pthread_mutex_lock(&mutex_startTupleTs);
+	startTupleTs = start_ts;
+	pthread_mutex_unlock(&mutex_startTupleTs);
+	//switch the source to start_preparing mode;
+	status = START_PREPARING;
+}
+
+Timestamp StreamSource::getStartTupleTS(Timestamp dest_startTs){
+	pthread_mutex_lock(&mutex_file_handle);
+	if(dest_startTs>lastInputTs)
+		stopTupleTs = dest_startTs;
+	else
+		stopTupleTs = lastInputTs;
+	prepareToStop(this,stopTupleTs);
+	pthread_mutex_unlock(&mutex_file_handle);
+	return stopTupleTs;
+}
+void StreamSource::prepareToStop(Operator *op, Timestamp stopTS){
+	if(op->operator_type==STREAM_SOURCE||op->operator_type==PARTN_WIN
+			||op->operator_type==RANGE_WIN||op->operator_type==ROW_WIN)
+		if(!isWindowDownstream(op)){
+			op->status = START_PREPARING;
+			op->stopTupleTs = stopTS;
+		}
+	for(int i=0;i<op->numOutputs;i++){
+		if(op->outputs[i]->operator_type!=OUTPUT)
+			prepareToStop(op->outputs[i], stopTS);
+	}
+}
+bool StreamSource::isWindowDownstream(Operator *op){
+	//TODO: this implementation now only works with plan without sharing.
+	//for plan with sharing, the Operator structure needs to be augmented to include a list of query ID
+	//the Operator belongs to
+	for(int i=0;i<op->numOutputs; i++){
+		if (op->outputs[i]->operator_type == PARTN_WIN || op->outputs[i]->operator_type ==RANGE_WIN
+				|| op->outputs[i]->operator_type == ROW_WIN)
+				return true;
+	}
+
+	for(int i=0;i<op->numOutputs;i++)
+		if (isWindowDownstream(op->outputs[i])) return true;
+
+	return false;
+}
+
+int StreamSource::run_in_stop_preparing(TimeSlice timeSlice){
+	int rc;
+	unsigned int  numElements;
+	char         *inputTuple;
+	Timestamp     inputTs;
+	unsigned int  inputTupleLen;
+	Tuple         outputTuple;
+	bool          bHeartbeat;
+
+#ifdef _MONITOR_
+	startTimer ();
+#endif
+
+	numElements = timeSlice;
+
+	int max_delay = 0;
+
+	//local stats computation, by Thao Pham
+	Monitor::Timer mytime;
+	unsigned long long int timeBeforeLoop = mytime.getCPUTime();
+	int n_before = num_tuples_processed;
+	//end of part 1 of local stats computation, by Thao Pham
+	unsigned int e =0;
+
+	//to save time, this mutex is locked at the beginning of this function instead of everytime a tuple is read
+	pthread_mutex_lock(&mutex_file_handle);
+
+	for (e = 0 ; e < numElements ; e++) {
+
+		// We are blocked @ the output queue
+			if (outputQueue -> isFull())
+				break;
+
+		// Response Time Calculation By Lory Al Moakar
+		//get the current time
+		Monitor::Timer mytime;
+		unsigned long long int curTime = mytime.getTime();
+
+		//calculate time elapsed
+		curTime = curTime - this -> system_start_time;
+
+		//added by Thao Pham : curTime in CPU-time measurement (after switching getTime to read realtime):
+		unsigned long long int curCPUTime = mytime.getCPUTime();
+
+		curCPUTime = curCPUTime - system_start_CPUtime;
+
+		//end of cur real time added by Thao Pham
+
+		//calculate time elapsed in time units
+		unsigned long long int time_elapsed = curTime / time_unit;
+
+		// Get the next input tuple
+
+
+		if ((rc = source -> getNext (inputTuple,
+					     inputTupleLen,
+					     bHeartbeat,
+					     time_elapsed)) != 0)
+			return rc;
+
+		//end of part 2 of response time calculation by LAM
+		// We do not have an input tuple yet
+		if (!inputTuple)
+			break;
+
+		// Get the timestamp: which is the first field
+		memcpy (&inputTs, inputTuple, TIMESTAMP_SIZE);
+
+		//if it's time to stop this operator
+		if(inputTs>=stopTupleTs){
+			deactivate();
+			break;
+		}
+
+
+		// We should have a progress of time.
+		if (lastInputTs > inputTs) {
+			LOG << "StreamSource: input not in timestamp order" << endl;
+			return -1;
+		}
+
+		//input rate computation, by Thao Pham
+		numOfIncomingTuples ++;
+		//end of input rate computation, by Thao Pham
+		lastInputTs = inputTs;
+
+		//DROP OR KEEP
+
+		bool drop = 0;
+
+		unsigned int r = rand()%100+1; //random number from 0-100
+		if(r <= this->drop_percent){
+			drop = 1;
+		}
+
+		//num_tuples_processed += 1;//if we put it here, we don't count the cost of those dropped
+
+		if(!drop)
+		{
+			//local cost computation, by Thao Pham (selectivity of input is always equals to the drop_percent)
+			// find out the num_tuples_processed so far
+
+			num_tuples_processed += 1;
+
+			// end of part 2 of local cost computation, by Thao Pham
+
+			//HR implementation by Lory Al Moakar
+			int x = time_elapsed - lastInputTs ;
+			if ( x > max_delay )
+			  max_delay = x;
+			// end of part 1 of HR implementation by LAM
+
+			// Ignore heartbeats
+			if (bHeartbeat) {
+				LOG << "Heartbeat received" << endl;
+				continue;
+			}
+
+#ifdef _CTRL_LOAD_MANAGE_
+			for(int i=0;i<numOutputs;i++)
+			{
+				this->outputs[i]->ctrl_num_of_queuing_tuples +=1;
+			}
+			this->ctrl_num_of_queuing_tuples -=1;
+			ctrl_actual_total_incoming_tuples +=1;
+
+#endif //_CTRL_LOAD_MANAGE
+
+
+			// Get the storage for the output tuple
+			if ((rc = storeAlloc -> newTuple (outputTuple)) != 0)
+				return rc;
+
+			// Get the attributes
+			for (unsigned int a = 0 ; a < numAttrs ; a++) {
+				switch (attrs [a].type) {
+				case INT:
+					memcpy (&ICOL(outputTuple, outCols[a]),
+							inputTuple + offsets[a], INT_SIZE);
+					break;
+
+				case FLOAT:
+					memcpy (&FCOL(outputTuple, outCols[a]),
+							inputTuple + offsets[a], FLOAT_SIZE);
+					break;
+
+				case BYTE:
+					BCOL(outputTuple, outCols[a]) = inputTuple[offsets[a]];
+					break;
+
+				case CHAR:
+					strncpy (CCOL(outputTuple, outCols[a]),
+							 inputTuple + offsets[a],
+							 attrs[a].len);
+					break;
+
+				default:
+					// Should not come
+					return -1;
+				}
+			}
+
+			outputQueue -> enqueue (Element(E_PLUS, outputTuple, inputTs));
+			lastOutputTs = inputTs;
+
+		}
+
+		this->tupleCount = this->tupleCount+1;
+
+	}
+
+	// Heartbeat generation: Assert to the operator above that we won't
+	// produce any element with timestamp < lastInputTs
+
+	if (!outputQueue -> isFull() && (lastInputTs > lastOutputTs)) {
+		outputQueue -> enqueue (Element::Heartbeat(lastInputTs));
+		lastOutputTs = lastInputTs;
+	}
+
+	pthread_mutex_unlock(&mutex_file_handle);
+
+#ifdef _MONITOR_
+	stopTimer ();
+	logOutTs (lastOutputTs);
+#endif
+
+	//local cost computation, by Thao Pham
+	//get current time
+	unsigned long long int timeAfterLoop = mytime.getCPUTime();
+
+	//calculate time elapsed during execution
+	//add it to local cost
+	if ( num_tuples_processed > n_before )//e >= 1
+	  local_cost += timeAfterLoop - timeBeforeLoop;
+	//printf("%lld\n", local_cost);
+	//end of part 3 of cost computation by Thao Pham
+
+
+	return 0;
+}
+
+void StreamSource::deactivate(){
+	status = INACTIVE;
 }

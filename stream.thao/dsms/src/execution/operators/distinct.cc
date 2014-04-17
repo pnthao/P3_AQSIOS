@@ -630,3 +630,22 @@ int Distinct::run_with_shedder (TimeSlice timeSlice)
 {
 	return 0;
 }
+
+//ArmaDILoS, by Thao Pham
+void Distinct::deactivate(){
+
+	status = INACTIVE;
+
+	Element e;
+	while(!inputQueue->isEmpty()){
+		inputQueue->dequeue(e);
+		UNLOCK_INPUT_TUPLE(e.tuple);
+	}
+
+	Tuple t;
+	if(outputSynopsis)
+		((RelationSynopsis*)outputSynopsis)->clearSyn(outStore);
+
+}
+
+//end of ArmaDILoS

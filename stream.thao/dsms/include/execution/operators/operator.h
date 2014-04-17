@@ -23,8 +23,19 @@
 typedef unsigned int TimeSlice;
 
 namespace Execution {
+//armaDiLos, by Thao Pham
+enum OperatorStatus{
+	ACTIVE,
+	INACTIVE,
+	START_PENDING, //for source ops: read and keep tuples in an input queue, wait for starting_TS from source node, for output ops: keep output tuples in the queue waiting for finish ack from source
+	START_PREPARING,//for source ops: discarding tuples with ts<starting_TS and change itself to active status; for output ops: read and output queued output tuples to file
+	STOP_PREPARING
 
- //HR implementation by Lory Al Moakar
+};
+
+//end of ArmaDILoS by Thao Pham
+
+//HR implementation by Lory Al Moakar
   // the maximum number of inputs an operator can have
   static const unsigned int MAX_IN_BRANCHING = 2;
   
@@ -248,9 +259,26 @@ namespace Execution {
 		virtual int readyToExecute()= 0;
 		//end of part 1 of HR with ready by LAM
 		
-		//query placement by Thao Pham
-		bool b_active;
-		//end of query placement by Thao Pham
+		//ArmaDILoS  by Thao Pham
+		Timestamp startTupleTs; //used for dest node in query migration
+		Timestamp stopTupleTs; //used for source node in query migration, this is the startTupleTs at the corresponding dest node
+
+		OperatorStatus status;
+
+		void setOperatorStatus(OperatorStatus s){
+			//need mutex or not?
+			status = s;
+		}
+
+		virtual void deactivate(){status = INACTIVE;};
+		void deactivatePrecedingOps(){
+			//TODO: all these implementation for ArmaDILoS now only works for plan without sharing
+			deactivate();
+			for(int i=0;i<numInputs;i++){
+				inputs[i]->deactivatePrecedingOps();
+			}
+		}
+		//end of ArmaDILoS by Thao Pham
 
 		//load managing, by Thao Pham
 		virtual int run_with_shedder (TimeSlice timeSlice)=0;

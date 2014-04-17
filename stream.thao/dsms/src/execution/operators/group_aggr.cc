@@ -860,3 +860,17 @@ int GroupAggr::run_with_shedder (TimeSlice timeSlice)
 {
 	return 0;
 }
+
+void GroupAggr::deactivate(){
+	status = INACTIVE;
+	bStalled = false;
+	Element e;
+	while(!inputQueue->isEmpty()){
+		inputQueue->dequeue(e);
+		UNLOCK_INPUT_TUPLE(e.tuple);
+	}
+	if(outputSynopsis)
+		outputSynopsis->clearSyn(outStore);
+	if(inputSynopsis)
+		inputSynopsis->clearSyn(inStore);
+}

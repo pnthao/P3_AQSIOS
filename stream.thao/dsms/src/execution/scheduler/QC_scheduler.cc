@@ -507,7 +507,7 @@ void QCScheduler::updateNodeInfo(Communicator * comm){
 	for(int i=0;i<num_loadMgrs; i++){
 		Execution::LoadManager *loadMgr = loadMgrs[i];
 		for(int o=0;o<loadMgr->numOps;o++){
-			if(loadMgr->ops[o]->kind == Physical::PO_OUTPUT && loadMgr->ops[o]->b_active ==true){
+			if(loadMgr->ops[o]->kind == Physical::PO_OUTPUT && loadMgr->ops[o]->instOp->status!=INACTIVE){
 				comm->nodeInfo->setQueryLoad(loadMgr->ops[o]->u.OUTPUT.queryId, loadMgr->ops[o]->u.OUTPUT.avgQueryLoad);
 				//reset the average query load (i.e., query's capacity usage
 				loadMgr->ops[o]->u.OUTPUT.avgQueryLoad = 0;
@@ -516,7 +516,7 @@ void QCScheduler::updateNodeInfo(Communicator * comm){
 		}
 
 	}
-	//tell the communicator that the updates are ready, so that it can send them to the coordicator
+	//tell the communicator that the updates are ready, so that it can send them to the coordinator
 	comm->isUpdateReady = 1;
 	pthread_cond_signal(&comm->condUpdateReady);
 	pthread_mutex_unlock(&comm->mutexUpdateReady);
@@ -529,7 +529,7 @@ void QCScheduler::updateActiveQueriesList(Execution::Communicator* comm){
 	for(int i=0;i<num_loadMgrs; i++){
 		Execution::LoadManager *loadMgr = loadMgrs[i];
 		for(int o=0;o<loadMgr->numOps;o++){
-			if(loadMgr->ops[o]->kind == Physical::PO_OUTPUT && loadMgr->ops[o]->b_active ==true){
+			if(loadMgr->ops[o]->kind == Physical::PO_OUTPUT && loadMgr->ops[o]->instOp->status!=INACTIVE){
 				comm->nodeInfo->addActiveQuery(loadMgr->ops[o]->u.OUTPUT.queryId);
 				//initialize
 				loadMgr->ops[o]->u.OUTPUT.queryLoad = 0; //initialize
@@ -577,7 +577,7 @@ void QCScheduler::setSteadyState(){
 	}
 }
 
-void QCScheduler::getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,streampos> &sourceFilePos){
+void QCScheduler::getSourceFilePos(std::set<int> queryIDs,std::map<Physical::Operator*,streampos> &sourceFilePos){
 
 	/*getFilePos implemented in file_source, which stream_source operator will call and return to this function
 	no need to use mutex here, since it is ok if the read pos is off the current by one line
@@ -588,11 +588,22 @@ void QCScheduler::getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,str
 	}
 };
 
-Operator* QCScheduler::getSourceFromID(int sourceID){
+Physical::Operator* QCScheduler::getSourceFromID(int sourceID){
 	for(int i=0; i<this->n_query_classes; i++){
-		Operator* src = scheds[i]->getSourceFromID(sourceID);
+		Physical::Operator* src = loadMgrs[i]->getSourceFromID(sourceID);
 		if(src!=0)
 			return src;
 	}
 	return 0;
+}
+
+void QCScheduler::onStartTimestampSet(Physical::Operator*source, set<int>queryIDs){
+	for(int i=0;i<num_loadMgrs;i++){
+		loadMgrs[i]->onStartTimestampSet(source,queryIDs);
+	}
+}
+void QCScheduler::onSourceCompleted(int queryID){
+	for(int i=0;i<num_loadMgrs;i++){
+		loadMgrs[i]->onSourceCompleted(queryID);
+	}
 }

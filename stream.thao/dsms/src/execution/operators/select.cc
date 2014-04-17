@@ -664,3 +664,14 @@ int Select::run_with_shedder(TimeSlice timeSlice)
 		return 0;
 }
 //end of embedded shedder, by Thao Pham
+
+//ArmaDILoS, by Thao Pham
+void Select::deactivate(){
+	status = INACTIVE;
+	Element e;
+	while(!inputQueue->isEmpty()){
+		inputQueue->dequeue(e);
+		UNLOCK_INPUT_TUPLE(e.tuple);
+	}
+}
+//end of ArmaDILoS, by Thao Pham

@@ -727,4 +727,16 @@ int Project::run_with_shedder(TimeSlice timeSlice)
 		return 0;
 }
 //end of embedded shedder
+void Project::deactivate(){
 
+	status = INACTIVE;
+	//clear the input queue
+	Element e;
+	while (inputQueue -> dequeue(e)) {
+		   UNLOCK_INPUT_TUPLE(e.tuple);
+
+	}
+	//clear the outsynopsis
+	if(outSynopsis)
+		outSynopsis->clearSyn();
+}

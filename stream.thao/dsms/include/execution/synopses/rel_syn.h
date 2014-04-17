@@ -22,6 +22,10 @@
 #endif
 #endif
 
+#ifndef _STORE_ALLOC_
+#include "execution/stores/store_alloc.h"
+#endif
+
 namespace Execution {
 	
 		
@@ -65,6 +69,12 @@ namespace Execution {
 		virtual int releaseScan (unsigned int scanId,
 								 TupleIterator *iter) = 0;
 		
+		//ArmaDiLos, by Thao Pham
+		virtual void clearSyn() =0;
+		//clear Syn and call extStore->decref
+		virtual void clearSyn(StorageAlloc* tupleStore)=0;
+		//end of ArmaDiLos
+
 	};
 #else
 	

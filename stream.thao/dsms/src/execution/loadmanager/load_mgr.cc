@@ -736,25 +736,55 @@ void LoadManager::updateAvgQueryLoad()
 		}
 }
 
-void LoadManager::findSource(Physical::Operator* op, set<Operator*> &relatedSource){
+void LoadManager::findSource(Physical::Operator* op, set<Physical::Operator*> &relatedSource){
 	if(op->kind==PO_STREAM_SOURCE){
-		relatedSource.insert(op->instOp);
+		relatedSource.insert(op);
 	}
 	else
 		for(unsigned int i=0;i<op->numInputs;i++)
 			findSource(op->inputs[i],relatedSource);
 }
 
-void LoadManager::getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,streampos> &sourceFilePos){
-	set<Operator*> relatedSources;
+void LoadManager::getSourceFilePos(std::set<int> queryIDs,std::map<Physical::Operator*,streampos> &sourceFilePos){
+	set<Physical::Operator*> relatedSources;
 	for (int i=0;i<numOutputs; i++){
 		set<int>::iterator it = queryIDs.find(outputs[i]->u.OUTPUT.queryId);
 		if(it!=queryIDs.end()){
 			findSource(outputs[i],relatedSources);
 		}
 	}
-	set<Operator*>::const_iterator it;
+	set<Physical::Operator*>::const_iterator it;
 	for(it = relatedSources.begin(); it!=relatedSources.end(); it++){
-		sourceFilePos.insert(std::pair<Operator*,streampos>(*it, ((StreamSource*)(*it))->getCurPos()));
+		sourceFilePos.insert(std::pair<Physical::Operator*,streampos>(*it, ((StreamSource*)((*it)->instOp))->getCurPos()));
+	}
+}
+Physical::Operator* LoadManager::getSourceFromID(int sourceID){
+	for(int i=0;i<numInputs; i++)
+		if(inputs[i]->instOp->operator_id==sourceID)
+			return inputs[i];
+	return 0;
+}
+void LoadManager::onStartTimestampSet(Physical::Operator* op, set<int>QueryIDs){
+
+	//TODO: this implementation is only correct if there is no sharing.
+	//in case of sharing, operators need to be checked against queryIDs set so as not to activate the
+	//query segment that does not belong to the query being activated.
+	if(op->kind == PO_OUTPUT/* && op->u.OUTPUT.queryId*/){
+		op->instOp->status = START_PENDING;
+	}
+	else{
+		if(op->kind!=PO_STREAM_SOURCE)
+			op->instOp->status = ACTIVE;
+		for(int o=0;o<op->numOutputs;o++){
+			onStartTimestampSet(op->outputs[o],QueryIDs);
+		}
+	}
+
+}
+
+void LoadManager::onSourceCompleted(int queryID){
+	for(int i=0;i<numOutputs;i++){
+		if(outputs[i]->u.OUTPUT.queryId == queryID)
+			outputs[i]->instOp->setOperatorStatus(START_PREPARING);
 	}
 }

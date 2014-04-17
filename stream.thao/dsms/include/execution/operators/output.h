@@ -27,6 +27,7 @@
 #include "common/constants.h"
 #endif
 
+#include<queue>
 
 namespace Execution {
 	
@@ -189,6 +190,11 @@ namespace Execution {
 		bool isSignificantlyBelowTargetObserved(double gap);
 		//end of avg response time calculation, by Thao Pham 
 		
+		//ArmaDILoS
+		int run_in_start_pending(TimeSlice timeSlice);
+		int run_in_start_preparing(TimeSlice timeSlice);
+		std::queue<char*> pending_tuples;
+		void deactivate();
 	};
 }
 

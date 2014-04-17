@@ -700,7 +700,7 @@ int PlanManagerImpl::initScheduler (Execution::Scheduler *sched)
 		//end of part 5  of Query Class Scheduling by LAM
 
 		//query placement by Thao Pham, pass the activate info from PhyOp to ExecOp
-		op->instOp->b_active = op->b_active;
+		op->instOp->status = (op->b_active)? Execution::ACTIVE: Execution::INACTIVE;
 
 		//end of query placement by Thao Pham
 

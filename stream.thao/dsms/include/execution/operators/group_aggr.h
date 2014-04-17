@@ -163,6 +163,8 @@ namespace Execution {
 		//HR with ready by Lory Al Moakar
 		int readyToExecute();
 		//end of part 1 of HR with ready by LAM		
+		//ArmaDILoS, by Thao Pham
+		void deactivate();
 		
 	private:
 		

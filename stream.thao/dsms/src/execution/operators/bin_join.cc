@@ -1568,3 +1568,34 @@ int BinaryJoin::run_with_shedder (TimeSlice timeSlice)
 {
 	return 0;
 }
+
+/////////////////////////
+//ArmaDiLos, by Thao Pham
+void BinaryJoin::deactivate(){
+
+	status = INACTIVE;
+
+	bStalled = false;
+	Element e;
+	while(!innerInputQueue->isEmpty()){
+		innerInputQueue->dequeue(e);
+		UNLOCK_INNER_TUPLE(e.tuple);
+	}
+	while(!outerInputQueue->isEmpty()){
+		outerInputQueue->dequeue(e);
+		UNLOCK_OUTER_TUPLE(e.tuple);
+	}
+	Tuple t;
+	//delete the synopsis and decref of the tuples (in stores) pointed to by the synopsis entries
+	if(innerSynopsis)
+		innerSynopsis->clearSyn(innerInputStore);
+	if(outerSynopsis)
+		outerSynopsis->clearSyn(outerInputStore);
+
+	//clear join synopsis as well
+	if(joinSynopsis)
+		joinSynopsis->clearSyn(outStore);
+}
+//end of ArmaDiLos
+
+

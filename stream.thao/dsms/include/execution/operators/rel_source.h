@@ -158,6 +158,9 @@ namespace Execution {
 		//HR with ready by Lory Al Moakar
 		int readyToExecute();
 		//end of part 1 of HR with ready by LAM
+
+		//TODO: add ArmaDILoS implementation for this op
+
 	private:
 
 		int decodeAttrs (char *inTuple, Tuple outTuple);

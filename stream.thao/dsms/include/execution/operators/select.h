@@ -113,6 +113,10 @@ namespace Execution {
 		FILE *f_cost_simulation;
 		int getDelayTime();
 		//end of cost simulation by Thao Pham
+
+		//ArmaDILoS, by Thao Pham
+		void deactivate();
+		//end of ArmaDILoS by Thao Pham
 	};
 }
 

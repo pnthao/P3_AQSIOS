@@ -725,3 +725,24 @@ int BinStreamJoin::run_with_shedder (TimeSlice timeSlice)
 {
 	return 0;
 }
+//ArmaDILoS, by Thao Pham
+void BinStreamJoin::deactivate(){
+
+	status = INACTIVE;
+
+	bStalled = false;
+	Element e;
+	while(!innerInputQueue->isEmpty()){
+		innerInputQueue->dequeue(e);
+		UNLOCK_INNER_TUPLE(e.tuple);
+	}
+	while(!outerInputQueue->isEmpty()){
+		outerInputQueue->dequeue(e);
+		UNLOCK_OUTER_TUPLE(e.tuple);
+	}
+	Tuple t;
+	if(innerSynopsis)
+		((RelationSynopsis*)innerSynopsis)->clearSyn(innerInStore);
+
+}
+//end of ArmaDILos

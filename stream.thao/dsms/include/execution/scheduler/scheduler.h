@@ -39,10 +39,11 @@ namespace Execution {
 		//Amardilos
 		//get the list of file pos of the sources corresponding to a list of query ID,
 		//the related schedulers is expected to provide an override of this method
-		virtual void getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,streampos> &sourceFilePos){};
+		virtual void getSourceFilePos(std::set<int> queryIDs,std::map<Physical::Operator*,streampos> &sourceFilePos){};
 		//find the source operator of a specific ID
-		virtual Operator* getSourceFromID(int sourceID){return 0;};
-
+		virtual Physical::Operator* getSourceFromID(int sourceID){return 0;};
+		virtual void onStartTimestampSet(Physical::Operator* source, set<int>QueryIDs){};
+		virtual void onSourceCompleted(int queryID){};
 		/**
 		 * Add a new operator to schedule
 		 */

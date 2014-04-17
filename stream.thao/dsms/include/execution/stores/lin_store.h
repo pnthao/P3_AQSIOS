@@ -4,6 +4,9 @@
 #ifndef _TUPLE_
 #include "execution/internals/tuple.h"
 #endif
+#ifndef _STORE_ALLOC_
+#include "execution/stores/store_alloc.h"
+#endif
 
 namespace Execution {
 	class LinStore {
@@ -27,7 +30,11 @@ namespace Execution {
 		 */		
 		
 		virtual int getTuple_l (Tuple *lineage, Tuple &tuple, 
-								unsigned int stubId) = 0;		
+								unsigned int stubId) = 0;
+		//armaDILoS, by Thao Pham
+		virtual void clearStore(unsigned int stubID) = 0;
+		virtual void clearStore(unsigned int stubID, StorageAlloc* tupleStore) =0;
+		//end of ArmaDILoS, by Thao Pham
 		
 	};
 }

@@ -57,4 +57,13 @@ int LineageSynopsisImpl::getTuple (Tuple *lineage, Tuple &tuple)
 	return store -> getTuple_l (lineage, tuple, stubId);
 }
 
+void LineageSynopsisImpl::clearSyn(){
+	ASSERT(store);
+	store->clearStore(stubId);
+}
+//clear Syn and call extStore->decref
+void LineageSynopsisImpl::clearSyn(StorageAlloc* tupleStore){
+	ASSERT(store);
+	store->clearStore(stubId,tupleStore);
+}
 	

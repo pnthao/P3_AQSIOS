@@ -277,8 +277,12 @@ namespace Execution {
 		void updateAvgQueryLoad();
 		
 		//ArmaDiLos
-		void getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,streampos> &sourceFilePos);
-		void findSource(Physical::Operator* op, set<Operator*> &relatedSource);
+		void getSourceFilePos(std::set<int> queryIDs,std::map<Physical::Operator*,streampos> &sourceFilePos);
+		void findSource(Physical::Operator* op, set<Physical::Operator*> &relatedSource);
+		Physical::Operator* getSourceFromID(int sourceID);
+		//Physical::Operator* findPhysicalOp(Operator* op); //find the physical op corresponding to the Execution Op
+		void onStartTimestampSet(Physical::Operator*op, set<int> queryIDs);
+		void onSourceCompleted(int queryID);
 
 #endif //_CTRL_LOAD_MANAGE_	    
 

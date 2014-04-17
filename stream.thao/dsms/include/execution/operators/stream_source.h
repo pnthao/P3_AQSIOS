@@ -116,6 +116,7 @@ namespace Execution {
 		int run (TimeSlice timeSlice);
 		//load manager, by Thao Pham
 		int run_with_shedder (TimeSlice timeSlice);
+
 		//end of load manager, by Thao Pham
 		
 		//HR implementation by Lory Al Moakar
@@ -190,11 +191,29 @@ namespace Execution {
 		
 #endif //_CTRL_LOAD_MANAGE_
 		//ArmaDILoS
+private:
+		std::queue<char*> pending_tuples;
+		pthread_mutex_t mutex_startTupleTs;
+		//this mutex is used to make sure the query migration thread can obtain the correct current
+		//timestamp of the source;
+		pthread_mutex_t mutex_file_handle;
+public:
 		std::streampos getCurPos();
 		//when a node serves as destination in a migration, the source start reading from the source file at the specific position
 		//and return the timestamp of the first tuple it read
 		Timestamp startDataReading(std::streampos curPos);
-		//end of load managing, by Thao Pham
+		int run_in_start_pending(TimeSlice timeSlice);
+		int run_in_start_preparing(TimeSlice timeSlice);
+		int run_in_stop_preparing(TimeSlice timeSlice);
+		//as destination node
+		void setStartTupleTS(Timestamp start_ts);
+		static bool isWindowDownstream(Operator *op);
+		static void prepareToStop(Operator *op, Timestamp stopTs);
+		//as source node
+		Timestamp getStartTupleTS(Timestamp dest_startTs);
+		void deactivate();
+
+		//end of ArmaDILoS, by Thao Pham
 	};
 }
 

@@ -78,8 +78,10 @@ namespace Execution {
 		// amardilos, by Thao Pham
 		void updateNodeInfo(Communicator* comm);
 		void updateActiveQueriesList(Communicator *comm);
-		virtual void getSourceFilePos(std::set<int> queryIDs,std::map<Operator*,streampos> &sourceFilePos);
-		virtual Operator* getSourceFromID(int sourceID);
+		virtual void getSourceFilePos(std::set<int> queryIDs,std::map<Physical::Operator*,streampos> &sourceFilePos);
+		virtual Physical::Operator* getSourceFromID(int sourceID);
+		virtual void onStartTimestampSet(Physical::Operator* source, set<int>QueryIDs);
+		virtual void onSourceCompleted(int queryID);
 
   };
 }

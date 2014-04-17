@@ -5,6 +5,10 @@
 #include "execution/internals/tuple.h"
 #endif
 
+#ifndef _STORE_ALLOC_
+#include "execution/stores/store_alloc.h"
+#endif
+
 /**
  * @file         lin_syn.h
  * @date         Aug. 25, 2004
@@ -65,6 +69,11 @@ namespace Execution {
 		 */
 		virtual int getTuple (Tuple *lineage, Tuple &tuple)
 			= 0;
+		//ArmaDiLos, by Thao Pham
+		virtual void clearSyn() =0;
+		//clear Syn and call extStore->decref
+		virtual void clearSyn(StorageAlloc* tupleStore)=0;
+		//end of ArmaDiLos
 	};
 #else
 	class LineageSynopsis : public Monitor::SynMonitor {
