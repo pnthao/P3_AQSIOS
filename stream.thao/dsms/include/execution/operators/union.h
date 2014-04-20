@@ -124,6 +124,8 @@ namespace Execution {
 		int readyToExecute();
 		//end of part 1 of HR with ready by LAM
 
+		//TODO: add ArmaDILoS implementation here
+
 
 	private:
 		int handleLeftPlus (Element element);

@@ -290,7 +290,10 @@ int Union::run (TimeSlice timeSlice)
 	  local_cost += timeAfterLoop - timeBeforeLoop;
 	//end of part 4 of HR implementation by LAM	
 	
-	 
+	//deactivate itself it there is no more incoming tuples to expect
+	if(rightInQueue->isEmpty()&& leftInQueue->isEmpty()
+			&& inputs[0]->status==INACTIVE &&inputs[1]->status == INACTIVE)
+			deactivate();
 	
 	return 0;
 }

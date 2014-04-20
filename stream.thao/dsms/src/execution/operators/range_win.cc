@@ -295,6 +295,9 @@ int RangeWindow::run(TimeSlice timeSlice)
 	if ( e > 0 )
 		local_cost += timeAfterLoop - timeBeforeLoop;
 
+	//deactivate itself it there is no more incoming tuples to expect
+	if(inputQueue->isEmpty()&&inputs[0]->status==INACTIVE)
+		deactivate();
 	return 0;
 }
 
@@ -852,14 +855,21 @@ int RangeWindow::run_with_shedder(TimeSlice timeSlice)
 void RangeWindow::deactivate(){
 	//deactivate itself first
 	status = INACTIVE;
+	bStalled = false;
 	//empty the input queue
 	Element e;
-	while(!inputQueue->isEmpty())
+	while(!inputQueue->isEmpty()){
 		inputQueue->dequeue(e);
+		UNLOCK_INPUT_TUPLE(e.tuple);
+	}
 	//clear the synopsis
-	while(!winSynopsis->isEmpty())
+	while(!winSynopsis->isEmpty()){
+		Tuple oldestTuple;
+		Timestamp ts;
+		winSynopsis->getOldestTuple(oldestTuple,ts);
 		winSynopsis->deleteOldestTuple();
-	bStalled = false;
+		UNLOCK_INPUT_TUPLE(oldestTuple);
+	}
 }
 
 int RangeWindow::run_in_stop_preparing(TimeSlice timeSlice){

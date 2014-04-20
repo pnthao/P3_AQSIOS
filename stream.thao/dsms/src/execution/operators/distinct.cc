@@ -247,7 +247,8 @@ int Distinct::run (TimeSlice timeSlice)
 	  local_cost += timeAfterLoop - timeBeforeLoop;
 
 	//end of part 4 of HR implementation by LAM
-	
+	if(inputQueue->isEmpty()&&inputs[0]->status==INACTIVE)
+		deactivate();
 		 
 	return 0;
 }

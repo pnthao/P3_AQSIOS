@@ -247,7 +247,11 @@ int Select::run (TimeSlice timeSlice)
 	  local_cost += timeAfterLoop - timeBeforeLoop;
 
 	//end of part 4 of HR implementation by LAM
-	
+
+	//deactivate itself it there is no more incoming tuples to expect
+	if(inputQueue->isEmpty()&&inputs[0]->status==INACTIVE)
+		deactivate();
+
 	return 0;
 }
 //HR implementation by Lory Al Moakar

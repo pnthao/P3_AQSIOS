@@ -333,6 +333,10 @@ int BinStreamJoin::run(TimeSlice timeSlice)
 
 	//end of part 4 of HR implementation by LAM	
 		
+	//deactivate itself if its input queues are empty and all of its input operators are inactive
+	if(innerInputQueue->isEmpty()&&outerInputQueue->isEmpty()
+			&&inputs[0]->status==INACTIVE && inputs[1]->status==INACTIVE &&!bStalled)
+		deactivate();
 	return 0;
 }
 

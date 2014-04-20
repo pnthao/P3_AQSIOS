@@ -70,7 +70,11 @@ namespace Execution {
 		// end of part 1 of HR implementation by LAM
 		//HR with ready by Lory Al Moakar
 		int readyToExecute();
-		//end of part 1 of HR with ready by LAM		       
+		//end of part 1 of HR with ready by LAM
+
+		//ArMaDILoS, by Thao Pham
+		void deactivate();
+		//end of ArmaDILoS
 	};
 }
 

@@ -28,6 +28,8 @@
 #endif
 
 #include<queue>
+#include<set>
+#include<semaphore.h>
 
 namespace Execution {
 	
@@ -195,6 +197,10 @@ namespace Execution {
 		int run_in_start_preparing(TimeSlice timeSlice);
 		std::queue<char*> pending_tuples;
 		void deactivate();
+
+		sem_t *sem_outputfinish;
+		pthread_mutex_t* mutex_outputIDs;
+		std::set<int>*outputIDs;
 	};
 }
 

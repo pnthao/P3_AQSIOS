@@ -288,13 +288,12 @@ int GroupAggr::run (TimeSlice timeSlice)
 	//add it to local cost
 	if ( e > 0 )
 	  local_cost += timeAfterLoop - timeBeforeLoop;
-	
-
-
-	
 
 	//end of part 4 of HR implementation by LAM
-		 
+	//deactivate itself if no more inputs should be expected
+	if(inputQueue->isEmpty()&&inputs[0]->status==INACTIVE&&!bStalled)
+		deactivate();
+
 	return 0;
 }
 

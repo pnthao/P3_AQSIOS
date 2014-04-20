@@ -484,6 +484,11 @@ int BinaryJoin::run (TimeSlice timeSlice)
 	//num_tuples_processed += e;
 	//end of part 4 of HR implementation by LAM
 
+     //if all the input queues are empty and all the input operators are inactive,
+      //this operator should deactivate itself.
+     if(innerInputQueue->isEmpty() && outerInputQueue->isEmpty()
+    		 &&inputs[0]->status==INACTIVE && inputs[1]->status==INACTIVE&&!bStalled)
+    	 deactivate();
         	
 	return 0;
 }

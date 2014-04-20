@@ -92,6 +92,9 @@ int Sink::run (TimeSlice timeSlice)
 #ifdef _MONITOR_
 	stopTimer ();
 #endif
+	//deactivate itself it there is no more incoming tuples to expect
+	if(inputQueue->isEmpty()&&inputs[0]->status==INACTIVE)
+		deactivate();
 	
 	return 0;
 }
@@ -125,4 +128,13 @@ int Sink::readyToExecute() {
 int Sink::run_with_shedder (TimeSlice timeSlice)
 {
 	return 0;
+}
+void Sink::deactivate(){
+
+	status = INACTIVE;
+	Element e;
+	while(!inputQueue->isEmpty()){
+		inputQueue->dequeue(e);
+		UNLOCK_INPUT_TUPLE(e.tuple);
+	}
 }

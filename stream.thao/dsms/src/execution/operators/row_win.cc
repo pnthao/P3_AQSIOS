@@ -253,6 +253,9 @@ int RowWindow::run (TimeSlice timeSlice)
 
 	//end of part 4 of HR implementation by LAM
 
+	//deactivate itself it there are no more incoming tuples to expect
+	if(inputQueue->isEmpty()&&inputs[0]->status==INACTIVE)
+		deactivate();
 	return 0;
 }
 
@@ -821,14 +824,24 @@ int RowWindow::run_in_stop_preparing(TimeSlice timeSlice){
 void RowWindow::deactivate(){
 	//inactivate itself first
 	status = INACTIVE;
-	//empty the input queue
-	Element e;
-	while(!inputQueue->isEmpty())
-		inputQueue->dequeue(e);
-	//clear the synopsis
-	while(!winSynopsis->isEmpty())
-		winSynopsis->deleteOldestTuple();
 	//clear stall if any
 	bStalled = false;
+	//empty the input queue
+	Element e;
+	while(!inputQueue->isEmpty()){
+		inputQueue->dequeue(e);
+		UNLOCK_INPUT_TUPLE(e.tuple);
+	}
+	//clear the synopsis
+	while(!winSynopsis->isEmpty()){
+		Tuple oldestTuple;
+		Timestamp ts;
+		winSynopsis->getOldestTuple(oldestTuple,ts);
+		winSynopsis->deleteOldestTuple();
+		UNLOCK_INPUT_TUPLE(oldestTuple);
+	}
+
+
+
 }
 //end of ArmaDILoS

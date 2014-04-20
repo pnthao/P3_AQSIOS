@@ -241,6 +241,10 @@ int Rstream::run (TimeSlice timeSlice)
 
 	//end of part 4 of HR implementation by LAM
 	
+	//deactivate itself it there is no more incoming tuples to expect
+	if(inputQueue->isEmpty()&&inputs[0]->status==INACTIVE)
+		deactivate();
+
 	return 0;
 }
 

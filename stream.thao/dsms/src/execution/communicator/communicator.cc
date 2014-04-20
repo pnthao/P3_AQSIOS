@@ -458,6 +458,30 @@ void Communicator::handleMigrationAsSource(MigrationInfo &migrationInfo)
 
 	printf("connected to the destination node, starting query migration... \n");
 
+	//initializing...
+	//semaphore to wait for output ops to complete
+	sem_t sem_outputfinish;
+	//IDs of output operators which has complete processing in the source node
+	set<int> outputIDs;
+	//mutex to protect the outputIDs from multiple writes
+	pthread_mutex_t mutex_outputIDs;
+	sem_init(&sem_outputfinish,0,0);
+	pthread_mutex_init(&mutex_outputIDs,NULL);
+
+	//assign these info for related output ops
+
+	for(int l=0;l<mainScheduler->num_loadMgrs;l++){
+		for(int o=0;o<mainScheduler->loadMgrs[l]->numOutputs;o++){
+			Physical::Operator* outputOp = mainScheduler->loadMgrs[l]->outputs[o];
+			if(migrationInfo.queryIDs.find(outputOp->u.OUTPUT.queryId)!=migrationInfo.queryIDs.end()){
+				((Output*)outputOp->instOp)->sem_outputfinish = &sem_outputfinish;
+				((Output*)outputOp->instOp)->mutex_outputIDs = &mutex_outputIDs;
+				((Output*)outputOp->instOp)->outputIDs = &outputIDs;
+			}
+		}
+	}
+
+
 	//send the list of query IDs to be shipped
 	stringstream ss;
 	ss<<"QI,";
@@ -516,10 +540,28 @@ void Communicator::handleMigrationAsSource(MigrationInfo &migrationInfo)
 
 	}
 	ss<<"E";
-	//test
-	cout<<ss.str()<<endl;
+
+
 	sendMessage(sockfd_migrationDest,ss.str().c_str());
 
+	//wait for output ops of the migrating queries to finish and ack the dest
+	int num_finished_queries = 0;
+	while(num_finished_queries<migrationInfo.queryIDs.size()){
+		sem_wait(&sem_outputfinish);
+
+		pthread_mutex_lock(&mutex_outputIDs);
+		//outputIDs set should not be empty
+		assert(!outputIDs.empty());
+		set<int>::iterator it = outputIDs.begin();
+
+		//TODO: check this, should be sending the integer instead of a string
+		write(sockfd_migrationDest,(char*)(*it),sizeof(int));
+
+		pthread_mutex_unlock(&mutex_outputIDs);
+
+		num_finished_queries++;
+
+	}
 
 
 	printf("end migration channel as source \n");

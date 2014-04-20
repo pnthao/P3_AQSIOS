@@ -306,8 +306,11 @@ int Project::run (TimeSlice timeSlice)
 	if ( e > 0 )
 	  local_cost += timeAfterLoop - timeBeforeLoop;
 	//end of part 4 of HR implementation by LAM
-
 	
+	//deactivate itself it there is no more incoming tuples to expect
+	if(inputQueue->isEmpty()&&inputs[0]->status==INACTIVE)
+		deactivate();
+
 	return 0;
 }
 	
@@ -732,11 +735,12 @@ void Project::deactivate(){
 	status = INACTIVE;
 	//clear the input queue
 	Element e;
-	while (inputQueue -> dequeue(e)) {
+	while (!inputQueue->isEmpty()) {
+			inputQueue->dequeue(e);
 		   UNLOCK_INPUT_TUPLE(e.tuple);
 
 	}
 	//clear the outsynopsis
 	if(outSynopsis)
-		outSynopsis->clearSyn();
+		outSynopsis->clearSyn(outStore);
 }

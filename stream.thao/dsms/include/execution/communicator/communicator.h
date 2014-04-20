@@ -13,6 +13,7 @@
 #include<thread_db.h>
 #include<string>
 #include<set>
+#include<semaphore.h>
 
 #ifndef NODE_INFO_H_
 #include "execution/communicator/node_info.h"

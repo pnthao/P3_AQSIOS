@@ -318,6 +318,9 @@ int Output::run (TimeSlice timeSlice)
 
 	//end of part 3 of cost computation by Thao Pham
 
+	//deactivate itself if no more inputs should be expected
+	if(inputQueue->isEmpty()&&inputs[0]->status==INACTIVE)
+		deactivate();
 	return 0;
 }
 //HR implementation by Lory Al Moakar
@@ -1025,7 +1028,10 @@ void Output::deactivate(){
 	Element e;
 	while(!inputQueue->isEmpty()){
 		inputQueue->dequeue(e);
-		if(e.kind !=E_HEARTBEAT)
-			UNLOCK_INPUT_TUPLE(e.tuple);
+		UNLOCK_INPUT_TUPLE(e.tuple);
 	}
+	pthread_mutex_lock(mutex_outputIDs);
+	outputIDs->insert(this->id);
+	pthread_mutex_unlock(mutex_outputIDs);
+	sem_post(sem_outputfinish);
 }
