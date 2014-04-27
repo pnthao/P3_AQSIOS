@@ -677,5 +677,10 @@ void Select::deactivate(){
 		inputQueue->dequeue(e);
 		UNLOCK_INPUT_TUPLE(e.tuple);
 	}
+	if(outputQueue->isEmpty()){
+		for(int i=0;i<numOutputs;i++){
+			outputs[i]->deactivate();
+		}
+	}
 }
 //end of ArmaDILoS, by Thao Pham

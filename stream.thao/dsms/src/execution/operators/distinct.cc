@@ -647,6 +647,11 @@ void Distinct::deactivate(){
 	if(outputSynopsis)
 		((RelationSynopsis*)outputSynopsis)->clearSyn(outStore);
 
+	if(outputQueue->isEmpty()){
+		for(int i=0;i<numOutputs;i++){
+			outputs[i]->deactivate();
+		}
+	}
 }
 
 //end of ArmaDILoS

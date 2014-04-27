@@ -970,16 +970,16 @@ Timestamp StreamSource::getStartTupleTS(Timestamp dest_startTs){
 	if(dest_startTs>lastInputTs)
 		stopTupleTs = dest_startTs;
 	else
-		stopTupleTs = lastInputTs;
-	prepareToStop(this,stopTupleTs);
+		stopTupleTs = lastInputTs; //+1; //TODO: now for testing purpose I skip the +1 to check the correctness of the transferring mechanism
 	pthread_mutex_unlock(&mutex_file_handle);
+	prepareToStop(this,stopTupleTs);
 	return stopTupleTs;
 }
 void StreamSource::prepareToStop(Operator *op, Timestamp stopTS){
 	if(op->operator_type==STREAM_SOURCE||op->operator_type==PARTN_WIN
 			||op->operator_type==RANGE_WIN||op->operator_type==ROW_WIN)
 		if(!isWindowDownstream(op)){
-			op->status = START_PREPARING;
+			op->status = STOP_PREPARING;
 			op->stopTupleTs = stopTS;
 		}
 	for(int i=0;i<op->numOutputs;i++){
@@ -991,14 +991,14 @@ bool StreamSource::isWindowDownstream(Operator *op){
 	//TODO: this implementation now only works with plan without sharing.
 	//for plan with sharing, the Operator structure needs to be augmented to include a list of query ID
 	//the Operator belongs to
+	if(op->operator_type == OUTPUT)
+		return false;
 	for(int i=0;i<op->numOutputs; i++){
 		if (op->outputs[i]->operator_type == PARTN_WIN || op->outputs[i]->operator_type ==RANGE_WIN
 				|| op->outputs[i]->operator_type == ROW_WIN)
 				return true;
+		else if (isWindowDownstream(op->outputs[i])) return true;
 	}
-
-	for(int i=0;i<op->numOutputs;i++)
-		if (isWindowDownstream(op->outputs[i])) return true;
 
 	return false;
 }
@@ -1026,9 +1026,6 @@ int StreamSource::run_in_stop_preparing(TimeSlice timeSlice){
 	int n_before = num_tuples_processed;
 	//end of part 1 of local stats computation, by Thao Pham
 	unsigned int e =0;
-
-	//to save time, this mutex is locked at the beginning of this function instead of everytime a tuple is read
-	pthread_mutex_lock(&mutex_file_handle);
 
 	for (e = 0 ; e < numElements ; e++) {
 
@@ -1072,6 +1069,7 @@ int StreamSource::run_in_stop_preparing(TimeSlice timeSlice){
 		memcpy (&inputTs, inputTuple, TIMESTAMP_SIZE);
 
 		//if it's time to stop this operator
+		cout <<"I am in source's run_in_stop_preparing"<<endl;
 		if(inputTs>=stopTupleTs){
 			deactivate();
 			break;
@@ -1182,8 +1180,6 @@ int StreamSource::run_in_stop_preparing(TimeSlice timeSlice){
 		lastOutputTs = lastInputTs;
 	}
 
-	pthread_mutex_unlock(&mutex_file_handle);
-
 #ifdef _MONITOR_
 	stopTimer ();
 	logOutTs (lastOutputTs);
@@ -1205,5 +1201,13 @@ int StreamSource::run_in_stop_preparing(TimeSlice timeSlice){
 }
 
 void StreamSource::deactivate(){
+	cout<<"I am a source that is deactivating myself"<<endl;
 	status = INACTIVE;
+	//deactivate downstream op if the output queue is empty, since the scheduler will check the input queue
+	//of each operator and those with empty input queue will never run (so it cannot deactivate itself)
+	if(outputQueue->isEmpty()){
+		for(int i=0;i<numOutputs;i++){
+			outputs[i]->deactivate();
+		}
+	}
 }

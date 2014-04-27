@@ -1024,6 +1024,7 @@ int Output::run_in_start_preparing(TimeSlice timeSlice){
 
 void Output::deactivate(){
 
+	cout<< "hey I am an output finishing" <<endl;
 	status = INACTIVE;
 	Element e;
 	while(!inputQueue->isEmpty()){
@@ -1033,5 +1034,5 @@ void Output::deactivate(){
 	pthread_mutex_lock(mutex_outputIDs);
 	outputIDs->insert(this->id);
 	pthread_mutex_unlock(mutex_outputIDs);
-	sem_post(sem_outputfinish);
+resetLocalStatisticsComputationCycle();
 }

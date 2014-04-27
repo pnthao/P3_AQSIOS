@@ -113,6 +113,8 @@ int RangeWindow::setInStore (StorageAlloc *store)
 
 int RangeWindow::run(TimeSlice timeSlice)
 {
+	if(status == STOP_PREPARING)
+		return run_in_stop_preparing(timeSlice);
 	int rc;
 	unsigned int numElements;
 	Element      inputElement;
@@ -869,6 +871,11 @@ void RangeWindow::deactivate(){
 		winSynopsis->getOldestTuple(oldestTuple,ts);
 		winSynopsis->deleteOldestTuple();
 		UNLOCK_INPUT_TUPLE(oldestTuple);
+	}
+	if(outputQueue->isEmpty()){
+		for(int i=0;i<numOutputs;i++){
+			outputs[i]->deactivate();
+		}
 	}
 }
 

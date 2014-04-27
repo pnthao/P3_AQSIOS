@@ -870,6 +870,9 @@ void GroupAggr::deactivate(){
 	}
 	if(outputSynopsis)
 		outputSynopsis->clearSyn(outStore);
-	if(inputSynopsis)
-		inputSynopsis->clearSyn(inStore);
+	if(outputQueue->isEmpty()){
+		for(int i=0;i<numOutputs;i++){
+			outputs[i]->deactivate();
+		}
+	}
 }

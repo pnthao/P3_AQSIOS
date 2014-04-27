@@ -1600,6 +1600,12 @@ void BinaryJoin::deactivate(){
 	//clear join synopsis as well
 	if(joinSynopsis)
 		joinSynopsis->clearSyn(outStore);
+
+	if(outputQueue->isEmpty()){
+		for(int i=0;i<numOutputs;i++){
+			outputs[i]->deactivate();
+		}
+	}
 }
 //end of ArmaDiLos
 

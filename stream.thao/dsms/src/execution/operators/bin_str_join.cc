@@ -748,5 +748,10 @@ void BinStreamJoin::deactivate(){
 	if(innerSynopsis)
 		((RelationSynopsis*)innerSynopsis)->clearSyn(innerInStore);
 
+	if(outputQueue->isEmpty()){
+		for(int i=0;i<numOutputs;i++){
+			outputs[i]->deactivate();
+		}
+	}
 }
 //end of ArmaDILos

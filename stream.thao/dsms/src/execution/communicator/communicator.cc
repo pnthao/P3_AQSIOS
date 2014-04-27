@@ -500,9 +500,9 @@ void Communicator::handleMigrationAsSource(MigrationInfo &migrationInfo)
 	ss<<"SP,"; //sources file position
 	for( map< Physical::Operator*, streampos>::iterator si = sources.begin(); si!=sources.end();si++)
 	{
-		ss<<(*si).first->instOp->operator_id <<"," << (*si).second <<",";
-		//TODO: check the operator id of the physical operator and execution operator to make sure they are the same
-		//done: no, they are not the same, but why would this matter, just make sure we are using one of them consistently?
+		ss<<(*si).first->id <<"," << (*si).second <<",";
+		//check the operator id of the physical operator and execution operator to make sure they are the same
+		//yes, just make sure you use the id attribute of Execution::Operator, not the operator_id
 	}
 	ss<<"E";
 
@@ -534,7 +534,7 @@ void Communicator::handleMigrationAsSource(MigrationInfo &migrationInfo)
 		msg++;
 		Timestamp ts = strtol(msg, &msg, 10);
 
-		//this turns source or most downstream window operator to START_PREPARING status as well
+		//this turns source or most downstream window operator to STOP_PREPARING status as well
 		ss<<((StreamSource*)src->instOp)->getStartTupleTS(ts)<<",";
 		msg++;
 
@@ -547,22 +547,40 @@ void Communicator::handleMigrationAsSource(MigrationInfo &migrationInfo)
 	//wait for output ops of the migrating queries to finish and ack the dest
 	int num_finished_queries = 0;
 	while(num_finished_queries<migrationInfo.queryIDs.size()){
+		cout<<"I am here waiting for my outputs to finish"<<endl;
 		sem_wait(&sem_outputfinish);
-
+		int outputID;
 		pthread_mutex_lock(&mutex_outputIDs);
 		//outputIDs set should not be empty
 		assert(!outputIDs.empty());
 		set<int>::iterator it = outputIDs.begin();
+		outputID = *it;
 
-		//TODO: check this, should be sending the integer instead of a string
-		write(sockfd_migrationDest,(char*)(*it),sizeof(int));
-
+		cout<<outputID<<endl;
 		pthread_mutex_unlock(&mutex_outputIDs);
 
+		//find the query ID of the output op
+		int queryID=0;
+		for(int l=0;l<mainScheduler->num_loadMgrs;l++){
+			for(int o=0;o<mainScheduler->loadMgrs[l]->numOutputs;o++){
+				Physical::Operator* outputOp = mainScheduler->loadMgrs[l]->outputs[o];
+				if(outputOp->id==outputID){
+					queryID = outputOp->u.OUTPUT.queryId;
+					break;
+				}
+			}
+		}
+		cout<<queryID<<endl;
+		int32_t queryID_to_send = htonl(queryID);
+		write(sockfd_migrationDest,&queryID_to_send,sizeof(queryID_to_send));
 		num_finished_queries++;
 
 	}
 
+	//wait for the finish signal from the destination
+	bzero(buf,512);
+	result = read(sockfd_migrationDest,buf,512);
+	assert(strcmp(buf,"F")==0||result==0);
 
 	printf("end migration channel as source \n");
 	close(sockfd_migrationDest);
@@ -657,19 +675,21 @@ void Communicator::handleMigrationAsDest(MigrationInfo &migrationInfo){
 	}
 
 	//wait for finish ack from source node, each msg contains the query ID;
-	bzero(buf,512);
 	int count =0;
 	while (count < queryIDs.size()){
-		bzero(buf,sizeof(int));
-		result = read(migrationInfo.sockfd_migration,buf,sizeof(int));
-		if(result==0) return; //TODO: later: need to handle this error case properly
-		msg = buf;
-		int queryID = strtol(msg,&msg,10);
+		int32_t queryID_received;
+		cout<<"I am here waiting to receive ack from source nodes"<<endl;
+		result = read(migrationInfo.sockfd_migration,&queryID_received,sizeof(queryID_received));
+		if(result==0){ cout << "error" <<endl;return;} //TODO: later: need to handle this error case properly
+		int queryID = ntohl(queryID_received);
+		cout << queryID <<endl;
 		assert(queryIDs.find(queryID)!=queryIDs.end());
 		count ++;
 		mainScheduler->onSourceCompleted(queryID);
 	}
 
+	//send the "finish" message to the source
+	sendMessage(migrationInfo.sockfd_migration,"F");
 	cout<<"end migration channel as destination"<<endl;
 	//end
 	close(migrationInfo.sockfd_migration);

@@ -760,7 +760,7 @@ void LoadManager::getSourceFilePos(std::set<int> queryIDs,std::map<Physical::Ope
 }
 Physical::Operator* LoadManager::getSourceFromID(int sourceID){
 	for(int i=0;i<numInputs; i++)
-		if(inputs[i]->instOp->operator_id==sourceID)
+		if(inputs[i]->id==sourceID)
 			return inputs[i];
 	return 0;
 }
