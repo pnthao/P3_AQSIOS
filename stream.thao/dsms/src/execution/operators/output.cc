@@ -1034,5 +1034,6 @@ void Output::deactivate(){
 	pthread_mutex_lock(mutex_outputIDs);
 	outputIDs->insert(this->id);
 	pthread_mutex_unlock(mutex_outputIDs);
-resetLocalStatisticsComputationCycle();
+
+	resetLocalStatisticsComputationCycle();
 }

@@ -1606,6 +1606,8 @@ void BinaryJoin::deactivate(){
 			outputs[i]->deactivate();
 		}
 	}
+
+	resetLocalStatisticsComputationCycle();
 }
 //end of ArmaDiLos
 

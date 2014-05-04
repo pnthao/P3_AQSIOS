@@ -682,5 +682,6 @@ void Select::deactivate(){
 			outputs[i]->deactivate();
 		}
 	}
+	resetLocalStatisticsComputationCycle();
 }
 //end of ArmaDILoS, by Thao Pham

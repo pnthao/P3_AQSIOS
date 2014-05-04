@@ -652,6 +652,7 @@ void Distinct::deactivate(){
 			outputs[i]->deactivate();
 		}
 	}
+	resetLocalStatisticsComputationCycle();
 }
 
 //end of ArmaDILoS

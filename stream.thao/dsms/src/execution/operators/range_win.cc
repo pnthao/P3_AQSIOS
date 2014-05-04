@@ -877,6 +877,7 @@ void RangeWindow::deactivate(){
 			outputs[i]->deactivate();
 		}
 	}
+	resetLocalStatisticsComputationCycle();
 }
 
 int RangeWindow::run_in_stop_preparing(TimeSlice timeSlice){

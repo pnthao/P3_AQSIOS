@@ -875,4 +875,5 @@ void GroupAggr::deactivate(){
 			outputs[i]->deactivate();
 		}
 	}
+	resetLocalStatisticsComputationCycle();
 }

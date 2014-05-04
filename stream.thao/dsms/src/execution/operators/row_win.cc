@@ -845,6 +845,7 @@ void RowWindow::deactivate(){
 			outputs[i]->deactivate();
 		}
 	}
+	resetLocalStatisticsComputationCycle();
 
 
 }

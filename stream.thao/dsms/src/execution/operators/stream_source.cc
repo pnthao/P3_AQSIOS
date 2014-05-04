@@ -1210,4 +1210,5 @@ void StreamSource::deactivate(){
 			outputs[i]->deactivate();
 		}
 	}
+	resetLocalStatisticsComputationCycle();
 }

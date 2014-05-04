@@ -137,4 +137,5 @@ void Sink::deactivate(){
 		inputQueue->dequeue(e);
 		UNLOCK_INPUT_TUPLE(e.tuple);
 	}
+	resetLocalStatisticsComputationCycle();
 }

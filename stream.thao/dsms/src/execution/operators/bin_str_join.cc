@@ -753,5 +753,6 @@ void BinStreamJoin::deactivate(){
 			outputs[i]->deactivate();
 		}
 	}
+	resetLocalStatisticsComputationCycle();
 }
 //end of ArmaDILos
