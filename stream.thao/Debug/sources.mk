@@ -58,4 +58,5 @@ dsms/src/execution/communicator \
 dsms/src/execution/communicator/.libs \
 dsms/src/common \
 dsms/src/common/.libs \
+.metadata/.plugins/org.eclipse.cdt.make.core \
 

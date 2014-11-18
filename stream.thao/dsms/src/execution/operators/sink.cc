@@ -138,4 +138,5 @@ void Sink::deactivate(){
 		UNLOCK_INPUT_TUPLE(e.tuple);
 	}
 	resetLocalStatisticsComputationCycle();
+	local_cost_per_tuple = 0;
 }

@@ -261,6 +261,7 @@ int ConfigFileReader::parseLine (const char *line,
 	  param = LOAD_MANAGER;
 	 
 	}
+
 	//end of load managing parameters, by Thao Pham
 	else {
 		LOG << "ConfigFileReader: unknown parameter in line no "

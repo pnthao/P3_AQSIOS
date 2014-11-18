@@ -267,7 +267,7 @@ int LoadManager::run(bool recomputeLoadCoefficient, int schedulingtype)
 	{	
 		totalLoad = totalEffectiveLoad;
 	}*/
-	//printf("load: %f\n", totalLoad);
+	printf("load: %f\n", totalLoad);
 	updateAvgCapacityUsage(totalLoad);
 	updateAvgQueryLoad();
 /***********************

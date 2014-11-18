@@ -570,11 +570,12 @@ void Communicator::handleMigrationAsSource(MigrationInfo &migrationInfo)
 				}
 			}
 		}
+		//remove the query id from the list of active query
 		nodeInfo->removeActiveQuery(queryID);
 		cout<<queryID<<endl;
 		int32_t queryID_to_send = htonl(queryID);
 		write(sockfd_migrationDest,&queryID_to_send,sizeof(queryID_to_send));
-		//remove the query id from the list of active query
+
 		num_finished_queries++;
 
 	}
@@ -688,6 +689,7 @@ void Communicator::handleMigrationAsDest(MigrationInfo &migrationInfo){
 		assert(queryIDs.find(queryID)!=queryIDs.end());
 		count ++;
 		mainScheduler->onSourceCompleted(queryID);
+
 		nodeInfo->addActiveQuery(queryID);
 	}
 

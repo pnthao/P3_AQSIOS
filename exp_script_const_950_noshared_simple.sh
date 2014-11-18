@@ -1,6 +1,6 @@
-cd /home/thao/workspace/p3-aqsios/stream/bin
-./gen_client -l /home/thao/workspace/stream.test.thao/log -c /home/thao/workspace/p3-aqsios/config_multipleclasses -s /home/thao/workspace/p3-aqsios/outputs/droplog/droplog  /home/thao/workspace/p3-aqsios/scripts/script_const_950_noshared
-cd /home/thao/workspace/p3-aqsios
+cd /home/thao/PITT/workspace/p3/P3_AQSIOS/stream/bin
+./gen_client -l /home/thao/workspace/stream.test.thao/log -c /home/thao/PITT/workspace/p3/P3_AQSIOS/config_multipleclasses -s /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/droplog/droplog  /home/thao/PITT/workspace/p3/P3_AQSIOS/scripts/script_const_950_noshared
+cd /home/thao/PITT/workspace/p3/P3_AQSIOS
 #./analysis.sh 1
 
 #analyse data

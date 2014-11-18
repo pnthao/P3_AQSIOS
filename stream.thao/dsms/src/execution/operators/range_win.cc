@@ -878,6 +878,7 @@ void RangeWindow::deactivate(){
 		}
 	}
 	resetLocalStatisticsComputationCycle();
+	local_cost_per_tuple = 0;
 }
 
 int RangeWindow::run_in_stop_preparing(TimeSlice timeSlice){

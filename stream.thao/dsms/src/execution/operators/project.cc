@@ -749,4 +749,5 @@ void Project::deactivate(){
 		}
 	}
 	resetLocalStatisticsComputationCycle();
+	local_cost_per_tuple = 0;
 }

@@ -2,127 +2,127 @@
 
 #class1
 table : register stream S( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream T( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream U( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream V( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream W( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream X( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream Z( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream B( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream C( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream D( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream E( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream Y( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream A( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 
 
 #class 2
 table : register stream S1( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream T1( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream U1( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream V1( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream W1( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream X1( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream Z1( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream B1( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream C1( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream D1( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream E1( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream Y1( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream A1( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 
 #class3
 
 table : register stream S2( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream T2( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream U2( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream V2( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream W2( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream X2( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream Z2( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream B2( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream C2( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream D2( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream E2( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream Y2( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 table : register stream A2( l char(12), m integer, h integer);
-source : /home/thao/workspace/p3-aqsios/inputs/humtemdata_const_950
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_const_950
 
 
 
@@ -138,18 +138,18 @@ query: select * from V where m <25;
 dest: /dev/null
 query: select * from W where m <15;
 dest: /dev/null
-query: select * from X [Range 10 seconds], Y [Range 10 seconds] where X.l = Y.l ;
-dest: /home/thao/workspace/p3-aqsios/outputs/detailed_data/expN_1query15.qo
-query: active select * from Z [Range 10 seconds], A [Range 10 seconds] where Z.l = A.l ;
+query: active select * from X [Range 10 seconds], Y [Range 10 seconds] where X.l = Y.l ;
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query15.qo
+query: select * from Z [Range 10 seconds], A [Range 10 seconds] where Z.l = A.l ;
 dest: /dev/null
-query: active select AVG(m) from B [Range 10 seconds];
-dest: /home/thao/workspace/p3-aqsios/outputs/detailed_data/expN_1query17.qo
+query: select AVG(m) from B [Range 10 seconds];
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query17.qo
 query: select AVG(m) from C [Range 10 seconds];
 dest: /dev/null
 query: select * from D where m <50;
-dest: /home/thao/workspace/p3-aqsios/outputs/detailed_data/expN_1query19.qo
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query19.qo
 query: select * from E where m <50;
-dest: /home/thao/workspace/p3-aqsios/outputs/detailed_data/expN_1query110.qo
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query110.qo
 
 
 qclass: 2
@@ -165,17 +165,17 @@ dest: /dev/null
 query: select * from W1 where m <15;
 dest: /dev/null
 query: select * from X1 [Range 10 seconds], Y1 [Range 10 seconds] where X1.l = Y1.l ;
-dest: /home/thao/workspace/p3-aqsios/outputs/detailed_data/expN_1query25.qo
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query25.qo
 query: select * from Z1 [Range 10 seconds], A1 [Range 10 seconds] where Z1.l = A1.l ;
 dest: /dev/null
 query: select AVG(m) from B1 [Range 10 seconds];
-dest: /home/thao/workspace/p3-aqsios/outputs/detailed_data/expN_1query27.qo
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query27.qo
 query: select AVG(m) from C1 [Range 10 seconds];
 dest: /dev/null
 query: select * from D1 where m <50;
-dest: /home/thao/workspace/p3-aqsios/outputs/detailed_data/expN_1query29.qo
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query29.qo
 query: select * from E1 where m <50;
-dest: /home/thao/workspace/p3-aqsios/outputs/detailed_data/expN_1query210.qo
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query210.qo
 
 qclass: 3
 
@@ -190,14 +190,14 @@ dest: /dev/null
 query: select * from W2 where m <15;
 dest: /dev/null
 query: select * from X2 [Range 10 seconds], Y2 [Range 10 seconds] where X2.l = Y2.l ;
-dest: /home/thao/workspace/p3-aqsios/outputs/detailed_data/expN_1query35.qo
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query35.qo
 query: select * from Z2 [Range 10 seconds], A2 [Range 10 seconds] where Z2.l = A2.l ;
 dest: /dev/null
 query: select AVG(m) from B2 [Range 10 seconds];
-dest: /home/thao/workspace/p3-aqsios/outputs/detailed_data/expN_1query37.qo
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query37.qo
 query: select AVG(m) from C2 [Range 10 seconds];
 dest: /dev/null
 query: select * from D2 where m <50;
-dest: /home/thao/workspace/p3-aqsios/outputs/detailed_data/expN_1query39.qo
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query39.qo
 query: select * from E2 where m <50;
-dest: /home/thao/workspace/p3-aqsios/outputs/detailed_data/expN_1query310.qo
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query310.qo

@@ -8,42 +8,43 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include subdir.mk
 -include gen_client/subdir.mk
--include dsms/src/server/subdir.mk
 -include dsms/src/server/.libs/subdir.mk
--include dsms/src/querygen/subdir.mk
+-include dsms/src/server/subdir.mk
 -include dsms/src/querygen/.libs/subdir.mk
--include dsms/src/parser/subdir.mk
+-include dsms/src/querygen/subdir.mk
 -include dsms/src/parser/.libs/subdir.mk
--include dsms/src/metadata/subdir.mk
+-include dsms/src/parser/subdir.mk
 -include dsms/src/metadata/.libs/subdir.mk
--include dsms/src/interface/subdir.mk
+-include dsms/src/metadata/subdir.mk
 -include dsms/src/interface/.libs/subdir.mk
--include dsms/src/execution/synopses/subdir.mk
+-include dsms/src/interface/subdir.mk
 -include dsms/src/execution/synopses/.libs/subdir.mk
--include dsms/src/execution/stores/subdir.mk
+-include dsms/src/execution/synopses/subdir.mk
 -include dsms/src/execution/stores/.libs/subdir.mk
--include dsms/src/execution/scheduler/subdir.mk
+-include dsms/src/execution/stores/subdir.mk
 -include dsms/src/execution/scheduler/.libs/subdir.mk
--include dsms/src/execution/queues/subdir.mk
+-include dsms/src/execution/scheduler/subdir.mk
 -include dsms/src/execution/queues/.libs/subdir.mk
--include dsms/src/execution/operators/subdir.mk
+-include dsms/src/execution/queues/subdir.mk
 -include dsms/src/execution/operators/.libs/subdir.mk
--include dsms/src/execution/monitors/subdir.mk
+-include dsms/src/execution/operators/subdir.mk
 -include dsms/src/execution/monitors/.libs/subdir.mk
--include dsms/src/execution/memory/subdir.mk
+-include dsms/src/execution/monitors/subdir.mk
 -include dsms/src/execution/memory/.libs/subdir.mk
--include dsms/src/execution/loadmanager/subdir.mk
+-include dsms/src/execution/memory/subdir.mk
 -include dsms/src/execution/loadmanager/.libs/subdir.mk
--include dsms/src/execution/internals/subdir.mk
+-include dsms/src/execution/loadmanager/subdir.mk
 -include dsms/src/execution/internals/.libs/subdir.mk
--include dsms/src/execution/indexes/subdir.mk
+-include dsms/src/execution/internals/subdir.mk
 -include dsms/src/execution/indexes/.libs/subdir.mk
--include dsms/src/execution/communicator/subdir.mk
+-include dsms/src/execution/indexes/subdir.mk
 -include dsms/src/execution/communicator/.libs/subdir.mk
--include dsms/src/common/subdir.mk
+-include dsms/src/execution/communicator/subdir.mk
 -include dsms/src/common/.libs/subdir.mk
+-include dsms/src/common/subdir.mk
+-include .metadata/.plugins/org.eclipse.cdt.make.core/subdir.mk
+-include subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -78,7 +79,7 @@ all: stream.thao.purdue
 stream.thao.purdue: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++  -o"stream.thao.purdue" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++  -o "stream.thao.purdue" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

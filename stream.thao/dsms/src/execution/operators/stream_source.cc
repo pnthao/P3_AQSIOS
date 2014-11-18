@@ -1211,4 +1211,5 @@ void StreamSource::deactivate(){
 		}
 	}
 	resetLocalStatisticsComputationCycle();
+	local_cost_per_tuple = 0;
 }

@@ -24,11 +24,11 @@
 #define MAX_OPS_PER_TYPE				1000
 
 //control period, 0.5sec, in nanosec
-#define CONTROL_PERIOD    			200000000	//25ms
-#define CONTROL_DELAY_TARGET 			500000000      //100ms
+#define CONTROL_PERIOD    			150000000	//150ms
+#define CONTROL_DELAY_TARGET 			300000000      //300ms
 
 //load manager and scheduler synergy
-#define SCHED_ADJUSTMENT_CYCLE		50 //five load management cycle
+#define SCHED_ADJUSTMENT_CYCLE		10 //five load management cycle
 //end of by Thao Pham, maximum number of operators of a type
 
 
