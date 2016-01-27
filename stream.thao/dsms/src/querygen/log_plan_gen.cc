@@ -12,6 +12,7 @@
 #endif
 
 #include <iostream>
+#include <stdio.h>
 using namespace std;
 
 using namespace Logical;
@@ -22,14 +23,16 @@ int LogPlanGen::genLogPlan (const Semantic::Query &query,
 	int rc;
 	
 	// Generate naive plan
-	if ((rc = genPlan_n (query, queryPlan)) != 0)
+	if ((rc = genPlan_n (query, queryPlan)) != 0){
+		printf("error in genPlan_n \n");
 		return rc;
-	
+	}
 	ASSERT (check_plan (queryPlan));	
 	
 	// Transformation 1: remove 
-	if((rc = t_rstreamNow (queryPlan)) != 0)
+	if((rc = t_rstreamNow (queryPlan)) != 0){
 		return rc;
+	}
 
 	ASSERT (check_plan (queryPlan));
 	
@@ -64,8 +67,9 @@ int LogPlanGen::genLogPlan (const Semantic::Query &query,
 	
 	ASSERT (check_plan (queryPlan));
 	
-	if((rc = t_pushSelect(queryPlan)) != 0)
+	if((rc = t_pushSelect(queryPlan)) != 0){
 		return rc;
+	}
 	
 	ASSERT (check_plan (queryPlan));
 	

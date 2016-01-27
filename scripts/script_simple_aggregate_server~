@@ -1,0 +1,13 @@
+
+table : register stream P1( l char(12), m integer, h integer);
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_realtcp
+
+table : register stream S1( l char(12), m integer, h integer);
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_realtcp
+
+qclass: 1
+query: select sum(m), sum(h) from S1 [Rows 10];
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query11_2.qo
+
+query: select * from P1 where m < 80;
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query12.qo

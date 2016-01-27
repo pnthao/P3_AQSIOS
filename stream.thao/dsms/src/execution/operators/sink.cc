@@ -135,7 +135,9 @@ void Sink::deactivate(){
 	Element e;
 	while(!inputQueue->isEmpty()){
 		inputQueue->dequeue(e);
-		UNLOCK_INPUT_TUPLE(e.tuple);
+		if(e.tuple){
+			UNLOCK_INPUT_TUPLE(e.tuple);
+		}
 	}
 	resetLocalStatisticsComputationCycle();
 	local_cost_per_tuple = 0;

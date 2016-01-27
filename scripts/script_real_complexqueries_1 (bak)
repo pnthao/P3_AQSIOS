@@ -1,0 +1,38 @@
+
+table : register stream P1( l char(12), m integer, h integer);
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_realtcp
+
+table : register stream S1( l char(12), m integer, h integer);
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_realtcp
+
+table : register stream T1( l char(12), m integer, h integer);
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_realtcp
+
+table : register stream U1( l char(12), m integer, h integer);
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_realtcp
+
+table : register stream V1( l char(12), m integer, h integer);
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_realtcp
+
+table : register stream W1( l char(12), m integer, h integer);
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_realtcp
+
+table : register stream X1( l char(12), m integer, h integer);
+source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_realtcp
+
+qclass: 1
+
+vquery: select S1.l, (S1.m + S1.h)/2, (T1.m + T1.h)/2 from S1 [Range 10 seconds], T1 [Range 10 seconds] where S1.l = T1.l;
+vtable: register stream V_Q11(l char(12), m int, h int);
+
+vquery: Istream (Select V_Q11.l, (V_Q11.m*2 + U1.m + V1.m + W1.m + X1.m)/6, (V_Q11.h*2 + U1.h + V1.h + W1.h + X1.h)/6  from V_Q11, U1 [Range 10 seconds], V1[Range 10 seconds], W1[Range 10 seconds],X1[Range 10 seconds] where V_Q11.l = U1.l and U1.l = V1.l and V1.l = W1.l and W1.l = X1.l); 
+vtable: register stream V_Q12 (l char(12), m int, h int);
+
+vquery: select l, avg(m), avg(h) from V_Q12 [Rows 10] group by V_Q12.l;
+vtable: register stream V_Q13 (l char(12), avgm float, avgh float);
+
+query: active Istream (select l, avgm from V_Q13 where avgm > 10.0);
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query11.qo
+
+query: select * from P1 where m < 80;
+dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query12.qo

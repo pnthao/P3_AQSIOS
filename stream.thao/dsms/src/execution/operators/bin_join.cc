@@ -521,10 +521,12 @@ int BinaryJoin::processOuterPlus (Element outerElement)
 	
 	evalContext -> bind (outerElement.tuple, OUTER_ROLE);
 	
+
 	// Insert the outer tuple into outerSynopsis
-	if ((rc = outerSynopsis -> insertTuple (outerElement.tuple)) != 0)
-		return rc;
-	
+	if(!(status==STOP_PREPARING && outerElement.timestamp >= stopTupleTs)){
+		if ((rc = outerSynopsis -> insertTuple (outerElement.tuple)) != 0)
+			return rc;
+	}
 	// Scan of inner tuples that join with outer tuple
 	if ((rc = innerSynopsis -> getScan (innerScanId, innerScan)) != 0)
 		return rc;
@@ -741,9 +743,10 @@ int BinaryJoin::processInnerPlus (Element innerElement)
 	evalContext -> bind (innerElement.tuple, INNER_ROLE);
 
 	// Insert the tuple into the inner synopsis
-	if ((rc = innerSynopsis -> insertTuple (innerElement.tuple)) != 0)
-		return rc;
-	
+	if(!(status==STOP_PREPARING && innerElement.timestamp >= stopTupleTs)){
+		if ((rc = innerSynopsis -> insertTuple (innerElement.tuple)) != 0)
+			return rc;
+	}
 	// Scan of outer tuples that join with inner tuple
 	if ((rc = outerSynopsis -> getScan (outerScanId, outerScan)) != 0)
 		return rc;
@@ -1584,11 +1587,15 @@ void BinaryJoin::deactivate(){
 	Element e;
 	while(!innerInputQueue->isEmpty()){
 		innerInputQueue->dequeue(e);
-		UNLOCK_INNER_TUPLE(e.tuple);
+		if(e.tuple){
+			UNLOCK_INNER_TUPLE(e.tuple);
+		}
 	}
 	while(!outerInputQueue->isEmpty()){
 		outerInputQueue->dequeue(e);
-		UNLOCK_OUTER_TUPLE(e.tuple);
+		if(e.tuple){
+			UNLOCK_OUTER_TUPLE(e.tuple);
+		}
 	}
 	Tuple t;
 	//delete the synopsis and decref of the tuples (in stores) pointed to by the synopsis entries

@@ -675,7 +675,9 @@ void Select::deactivate(){
 	Element e;
 	while(!inputQueue->isEmpty()){
 		inputQueue->dequeue(e);
-		UNLOCK_INPUT_TUPLE(e.tuple);
+		if(e.tuple){
+			UNLOCK_INPUT_TUPLE(e.tuple);
+		}
 	}
 	if(outputQueue->isEmpty()){
 		for(int i=0;i<numOutputs;i++){

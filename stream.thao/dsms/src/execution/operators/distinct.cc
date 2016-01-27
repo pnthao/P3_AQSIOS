@@ -640,7 +640,9 @@ void Distinct::deactivate(){
 	Element e;
 	while(!inputQueue->isEmpty()){
 		inputQueue->dequeue(e);
-		UNLOCK_INPUT_TUPLE(e.tuple);
+		if(e.tuple){
+			UNLOCK_INPUT_TUPLE(e.tuple);
+		}
 	}
 
 	Tuple t;

@@ -170,7 +170,10 @@ namespace Execution {
 		int readyToExecute();
 		//end of part 1 of HR with ready by LAM		
 
-		//TODO: ArmaDILoS implementation needed for this operator
+		//ArmaDILoS, by Thao Pham
+		void deactivate();
+
+		//end of ArmaDILoS
 
 	private:
 		

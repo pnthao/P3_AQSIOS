@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <memory.h>
+#include <stdio.h>
 //end of added by Thao
 
 using namespace Metadata;
@@ -60,7 +61,6 @@ int QueryManager::registerQuery (const char *qryStr,
 	
 	strncpy (next, qryStr, qryStrLen + 1);
 	next += (qryStrLen + 1);
-	
 	return 0;
 }
 

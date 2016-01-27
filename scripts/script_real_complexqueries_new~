@@ -1,0 +1,302 @@
+
+#group 1
+
+table : register stream P1( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_1
+
+table : register stream R1( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_2
+
+table : register stream S1( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_3
+
+table : register stream T1( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_4
+
+table : register stream U1( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_5
+
+table : register stream V1( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_6
+
+table : register stream W1( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_7
+
+table : register stream X1( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_8
+
+table : register stream Y1( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_9
+
+table : register stream Z1( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_10
+
+vquery: select S1.l, (S1.m + S1.h)/2, (T1.m + T1.h)/2 from S1 [Range 10 seconds], T1 [Range 10 seconds] where S1.l = T1.l;
+vtable: register stream V_Q11(l char(12), m int, h int);
+
+vquery: Istream (Select V_Q11.l, (V_Q11.m*2 + U1.m + V1.m + W1.m + X1.m)/6, (V_Q11.h*2 + U1.h + V1.h + W1.h + X1.h)/6  from V_Q11, U1 [Range 10 seconds], V1[Range 10 seconds], W1[Range 10 seconds],X1[Range 10 seconds] where V_Q11.l = U1.l and U1.l = V1.l and V1.l = W1.l and W1.l = X1.l); 
+vtable: register stream V_Q12 (l char(12), m int, h int);
+
+vquery: select l, avg(m), avg(h) from V_Q12 [Rows 10] group by V_Q12.l;
+vtable: register stream V_Q13 (l char(12), avgm float, avgh float);
+
+query: select l, avgm from V_Q13 where avgm > 10.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query11.qo
+
+query: select l, avgh from V_Q13 where avgh < 80.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query12.qo
+
+
+vquery: Istream (select V_Q11.l, (V_Q11.m*2 + P1.m + R1.m + Y1.m + Z1.m)/6, (V_Q11.m*2 + P1.m + R1.m + Y1.m + Z1.m)/6 from V_Q11, P1 [Range 10 seconds], R1[Range 10 seconds], Y1[Range 10 seconds], Z1[Range 10 seconds] where V_Q11.l = P1.l and P1.l = R1.l and R1.l = Y1.l and Y1.l = Z1.l); 
+vtable: register stream V_Q14 (l char(12), m int, h int);
+
+vquery: select l, avg(m), avg(h) from V_Q14 [rows 10] group by V_Q14.l;
+vtable: register stream V_Q15 (l char(12), avgm float, avgh float);
+
+query: select l, avgm from V_Q15 where avgm > 10.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query13.qo
+
+query: select l, avgm from V_Q15 where avgh < 80.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query14.qo
+
+#####group 2
+table : register stream P2( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_11
+
+table : register stream R2( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_12
+
+table : register stream S2( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_13
+
+table : register stream T2( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_14
+
+table : register stream U2( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_15
+
+table : register stream V2( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_16
+
+table : register stream W2( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_17
+
+table : register stream X2( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_18
+
+table : register stream Y2( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_19
+
+table : register stream Z2( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_20
+
+vquery: select S2.l, (S2.m + S2.h)/2, (T2.m + T2.h)/2 from S2 [Range 10 seconds], T2 [Range 10 seconds] where S2.l = T2.l;
+vtable: register stream V_Q21(l char(12), m int, h int);
+
+vquery: Istream (select V_Q21.l, (V_Q21.m*2 + U2.m + V2.m + W2.m + X2.m)/6, (V_Q21.h*2 + U2.h + V2.h + W2.h + X2.h)/6  from V_Q21, U2 [Range 10 seconds], V2[Range 10 seconds], W2[Range 10 seconds],X2[Range 10 seconds] where V_Q21.l = U2.l and U2.l = V2.l and V2.l = W2.l and W2.l = X2.l); 
+vtable: register stream V_Q22 (l char(12), m int, h int);
+
+vquery: select l, avg(m), avg(h) from V_Q22[rows 10] group by V_Q22.l;
+vtable: register stream V_Q23 (l char(12), avgm float, avgh float);
+
+query: select l, avgm from V_Q23 where avgm > 10.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query21.qo
+
+query: select l, avgh from V_Q23 where avgh < 80.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query22.qo
+
+
+vquery: Istream (select V_Q21.l, (V_Q21.m*2 + P2.m + R2.m + Y2.m + Z2.m)/6, (V_Q21.m*2 + P2.m + R2.m + Y2.m + Z2.m)/6 from V_Q21, P2 [Range 10 seconds], R2[Range 10 seconds], Y2[Range 10 seconds], Z2[Range 10 seconds] where V_Q21.l = P2.l and P2.l = R2.l and R2.l = Y2.l and Y2.l = Z2.l); 
+vtable: register stream V_Q24 (l char(12), m int, h int);
+
+vquery: select l, avg(m), avg(h) from V_Q24 [rows 10] group by V_Q24.l;
+vtable: register stream V_Q25 (l char(12), avgm float, avgh float);
+
+query: select l, avgm from V_Q25 where avgm > 10.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query23.qo
+
+query: select l, avgm from V_Q25 where avgh < 80.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query24.qo
+
+
+###########group 3
+
+table : register stream P3( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_21
+
+table : register stream R3( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_22
+
+table : register stream S3( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_23
+
+table : register stream T3( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_24
+
+table : register stream U3( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_25
+
+table : register stream V3( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_26
+
+table : register stream W3( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_27
+
+table : register stream X3( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_27
+
+table : register stream Y3( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_29
+
+table : register stream Z3( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_30
+
+vquery: select S3.l, (S3.m + S3.h)/2, (T3.m + T3.h)/2 from S3 [Range 10 seconds], T3 [Range 10 seconds] where S3.l = T3.l;
+vtable: register stream V_Q31(l char(12), m int, h int);
+
+vquery: Istream (select V_Q31.l, (V_Q31.m*2 + U3.m + V3.m + W3.m + X3.m)/6, (V_Q31.h*2 + U3.h + V3.h + W3.h + X3.h)/6  from V_Q31, U3 [Range 10 seconds], V3[Range 10 seconds], W3[Range 10 seconds],X3[Range 10 seconds] where V_Q31.l = U3.l and U3.l = V3.l and V3.l = W3.l and W3.l = X3.l); 
+vtable: register stream V_Q32 (l char(12), m int, h int);
+
+vquery: select l, avg(m), avg(h) from V_Q32 [rows 10] group by V_Q32.l;
+vtable: register stream V_Q33 (l char(12), avgm float, avgh float);
+
+query: select l, avgm from V_Q33 where avgm > 10.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query31.qo
+
+query: select l, avgh from V_Q33 where avgh < 80.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query32.qo
+
+
+vquery: Istream (select V_Q31.l, (V_Q31.m*2 + P3.m + R3.m + Y3.m + Z3.m)/6, (V_Q31.m*2 + P3.m + R3.m + Y3.m + Z3.m)/6 from V_Q31, P3 [Range 10 seconds], R3[Range 10 seconds], Y3[Range 10 seconds], Z3[Range 10 seconds] where V_Q31.l = P3.l and P3.l = R3.l and R3.l = Y3.l and Y3.l = Z3.l); 
+vtable: register stream V_Q34 (l char(12), m int, h int);
+
+vquery: select l, avg(m), avg(h) from V_Q34[rows 10] group by V_Q34.l;
+vtable: register stream V_Q35 (l char(12), avgm float, avgh float);
+
+query: select l, avgm from V_Q35 where avgm > 10.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query33.qo
+
+query: select l, avgm from V_Q35 where avgh < 80.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query34.qo
+
+
+###########group 4
+
+table : register stream P4( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_31
+
+table : register stream R4( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_32
+
+table : register stream S4( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_33
+
+table : register stream T4( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_34
+
+table : register stream U4( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_35
+
+table : register stream V4( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_36
+
+table : register stream W4( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_37
+
+table : register stream X4( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_38
+
+table : register stream Y4( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_39
+
+table : register stream Z4( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_40
+
+vquery: select S4.l, (S4.m + S4.h)/2, (T4.m + T4.h)/2 from S4 [Range 10 seconds], T4 [Range 10 seconds] where S4.l = T4.l;
+vtable: register stream V_Q41(l char(12), m int, h int);
+
+vquery: Istream (select V_Q41.l, (V_Q41.m*2 + U4.m + V4.m + W4.m + X4.m)/6, (V_Q41.h*2 + U4.h + V4.h + W4.h + X4.h)/6  from V_Q41, U4 [Range 10 seconds], V4[Range 10 seconds], W4[Range 10 seconds],X4[Range 10 seconds] where V_Q41.l = U4.l and U4.l = V4.l and V4.l = W4.l and W4.l = X4.l); 
+vtable: register stream V_Q42 (l char(12), m int, h int);
+
+vquery: select l, avg(m), avg(h) from V_Q42[rows 10] group by V_Q42.l;
+vtable: register stream V_Q43 (l char(12), avgm float, avgh float);
+
+query: select l, avgm from V_Q43 where avgm > 10.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query41.qo
+
+query: select l, avgh from V_Q43 where avgh < 80.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query42.qo
+
+
+vquery: Istream (select V_Q41.l, (V_Q41.m*2 + P4.m + R4.m + Y4.m + Z4.m)/6, (V_Q41.m*2 + P4.m + R4.m + Y4.m + Z4.m)/6 from V_Q41, P4 [Range 10 seconds], R4[Range 10 seconds], Y4[Range 10 seconds], Z4[Range 10 seconds] where V_Q41.l = P4.l and P4.l = R4.l and R4.l = Y4.l and Y4.l = Z4.l); 
+vtable: register stream V_Q44 (l char(12), m int, h int);
+
+vquery: select l, avg(m), avg(h) from V_Q44 [rows 10] group by V_Q44.l;
+vtable: register stream V_Q45 (l char(12), avgm float, avgh float);
+
+query: select l, avgm from V_Q45 where avgm > 10.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query43.qo
+
+query: select l, avgm from V_Q45 where avgh < 80.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query44.qo
+
+
+###########group 5
+
+table : register stream P5( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_41
+
+table : register stream R5( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_42
+
+table : register stream S5( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_43
+
+table : register stream T5( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_44
+
+table : register stream U5( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_45
+
+table : register stream V5( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_46
+
+table : register stream W5( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_47
+
+table : register stream X5( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_48
+
+table : register stream Y5( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_49
+
+table : register stream Z5( l char(12), m integer, h integer);
+source : /home/thao/PITT/vldb14.dilos.extraExp/inputs/humtemdata_realtcp_50
+
+vquery: select S5.l, (S5.m + S5.h)/2, (T5.m + T5.h)/2 from S5 [Range 10 seconds], T5 [Range 10 seconds] where S5.l = T5.l;
+vtable: register stream V_Q51(l char(12), m int, h int);
+
+vquery: Istream (select V_Q51.l, (V_Q51.m*2 + U5.m + V5.m + W5.m + X5.m)/6, (V_Q51.h*2 + U5.h + V5.h + W5.h + X5.h)/6  from V_Q51, U5 [Range 10 seconds], V5[Range 10 seconds], W5[Range 10 seconds],X5[Range 10 seconds] where V_Q51.l = U5.l and U5.l = V5.l and V5.l = W5.l and W5.l = X5.l); 
+vtable: register stream V_Q52 (l char(12), m int, h int);
+
+vquery: select l, avg(m), avg(h) from V_Q52 [rows 10] group by V_Q52.l;
+vtable: register stream V_Q53 (l char(12), avgm float, avgh float);
+
+query: select l, avgm from V_Q53 where avgm > 10.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query51.qo
+
+query: select l, avgh from V_Q53 where avgh < 80.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query52.qo
+
+
+vquery:Istream (select V_Q51.l, (V_Q51.m*2 + P5.m + R5.m + Y5.m + Z5.m)/6, (V_Q51.m*2 + P5.m + R5.m + Y5.m + Z5.m)/6 from V_Q51, P5 [Range 10 seconds], R5[Range 10 seconds], Y5[Range 10 seconds], Z5[Range 10 seconds] where V_Q51.l = P5.l and P5.l = R5.l and R5.l = Y5.l and Y5.l = Z5.l); 
+vtable: register stream V_Q54 (l char(12), m int, h int);
+
+vquery: select l, avg(m), avg(h) from V_Q54 [rows 10] group by V_Q54.l;
+vtable: register stream V_Q55 (l char(12), avgm float, avgh float);
+
+query: select l, avgm from V_Q55 where avgm > 10.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query53.qo
+
+query: select l, avgm from V_Q55 where avgh < 80.0;
+dest: /home/thao/PITT/vldb14.dilos.extraExp/outputs/detailed_data/expN_1query54.qo

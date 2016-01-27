@@ -6,6 +6,7 @@
 #include "execution/stores/rel_store_impl.h"
 #endif
 
+#include <iostream>
 using namespace Execution;
 using namespace std;
 

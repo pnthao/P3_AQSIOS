@@ -164,11 +164,12 @@ int Output::initialize()
 int Output::run (TimeSlice timeSlice)
 {
 
-	if(status == START_PENDING)
+	//Panos said we don't need this
+	/*if(status == START_PENDING)
 		return run_in_start_pending(timeSlice);
 	if(status ==START_PREPARING)
 		return run_in_start_preparing(timeSlice);
-
+*/
 	int rc;
 	Element inputElement;
 	Tuple inputTuple;
@@ -957,6 +958,9 @@ int Output::run_in_start_preparing(TimeSlice timeSlice){
 		num_tuples_processed += 1;
 		// end of part 2 of local cost computation, by Thao Pham
 
+		if(lastInputTs >tupleTs){
+			cout << "LastInputTs :" <<lastInputTs << ". tupleTS:" <<tupleTs <<endl;
+		}
 		ASSERT (lastInputTs <= tupleTs);
 
 #ifdef _DM_
@@ -1029,7 +1033,9 @@ void Output::deactivate(){
 	Element e;
 	while(!inputQueue->isEmpty()){
 		inputQueue->dequeue(e);
-		UNLOCK_INPUT_TUPLE(e.tuple);
+		if(e.tuple){
+			UNLOCK_INPUT_TUPLE(e.tuple);
+		}
 	}
 	pthread_mutex_lock(mutex_outputIDs);
 	outputIDs->insert(this->id);

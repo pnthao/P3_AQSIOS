@@ -769,16 +769,20 @@ void LoadManager::onStartTimestampSet(Physical::Operator* op, set<int>QueryIDs){
 	//TODO: this implementation is only correct if there is no sharing.
 	//in case of sharing, operators need to be checked against queryIDs set so as not to activate the
 	//query segment that does not belong to the query being activated.
-	if(op->kind == PO_OUTPUT/* && op->u.OUTPUT.queryId*/){
+	//Panos said we don't need syn at output
+	/*if(op->kind == PO_OUTPUT){
 		op->instOp->status = START_PENDING;
-	}
-	else{
+	}*/
+	/*else if (op->kind ==PO_GROUP_AGGR){
+		op->instOp->status = START_PREPARING; //group agg needs special treatment at the start
+	}*/
+	//else{
 		if(op->kind!=PO_STREAM_SOURCE)
 			op->instOp->status = ACTIVE;
 		for(int o=0;o<op->numOutputs;o++){
 			onStartTimestampSet(op->outputs[o],QueryIDs);
 		}
-	}
+	//}
 
 }
 

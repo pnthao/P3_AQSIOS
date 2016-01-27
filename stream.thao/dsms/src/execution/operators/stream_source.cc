@@ -960,28 +960,53 @@ int StreamSource::run_in_start_preparing(TimeSlice timeSlice)
 void StreamSource::setStartTupleTS(Timestamp start_ts){
 	pthread_mutex_lock(&mutex_startTupleTs);
 	startTupleTs = start_ts;
-	pthread_mutex_unlock(&mutex_startTupleTs);
 	//switch the source to start_preparing mode;
 	status = START_PREPARING;
+	pthread_mutex_unlock(&mutex_startTupleTs);
+
 }
 
 Timestamp StreamSource::getStartTupleTS(Timestamp dest_startTs){
 	pthread_mutex_lock(&mutex_file_handle);
+	cout << "dest_startTs :"  << dest_startTs << endl;
+	cout << "lastInputTs :"  << lastInputTs << endl;
 	if(dest_startTs>lastInputTs)
 		stopTupleTs = dest_startTs;
 	else
-		stopTupleTs = lastInputTs; //+1; //TODO: now for testing purpose I skip the +1 to check the correctness of the transferring mechanism
-	pthread_mutex_unlock(&mutex_file_handle);
+		stopTupleTs = lastInputTs + 1; 
 	prepareToStop(this,stopTupleTs);
+	pthread_mutex_unlock(&mutex_file_handle);
 	return stopTupleTs;
 }
+
+static bool isWindowBasedOpDownstream(Operator *op){
+	if(op->operator_type == OUTPUT)
+		return false;
+	for(int i=0;i<op->numOutputs;i++){
+		if((op->outputs[i]->operator_type == ROW_WIN)
+				||(op->outputs[i]->operator_type ==RANGE_WIN)
+				|| (op->outputs[i]->operator_type ==PARTN_WIN)
+				|| (op->outputs[i]->operator_type == GROUP_AGGR))
+			return true;
+		else if(isWindowBasedOpDownstream(op->outputs[i])) return true;
+	}
+	return false;
+}
 void StreamSource::prepareToStop(Operator *op, Timestamp stopTS){
+	//note this does not work with shared query
 	if(op->operator_type==STREAM_SOURCE||op->operator_type==PARTN_WIN
 			||op->operator_type==RANGE_WIN||op->operator_type==ROW_WIN)
 		if(!isWindowDownstream(op)){
+			cout << "op is ROW_WIN: " << (op->operator_type ==ROW_WIN) << endl;
 			op->status = STOP_PREPARING;
 			op->stopTupleTs = stopTS;
 		}
+
+	if(op->operator_type == BIN_JOIN && !isWindowBasedOpDownstream(op)){
+		cout << "hehehehahaha" <<endl;
+		op->status = STOP_PREPARING;
+		op->stopTupleTs = stopTS;
+	}
 	for(int i=0;i<op->numOutputs;i++){
 		if(op->outputs[i]->operator_type!=OUTPUT)
 			prepareToStop(op->outputs[i], stopTS);

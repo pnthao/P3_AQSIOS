@@ -14,7 +14,7 @@
 #define MAX_QUERIES         1000
 
 // Maximum number of attributes per (registered) table.
-#define MAX_ATTRS           10
+#define MAX_ATTRS           50
 
 // Maximum number of operators reading from an operator
 #define MAX_OUT_BRANCHING   10

@@ -862,7 +862,9 @@ void RangeWindow::deactivate(){
 	Element e;
 	while(!inputQueue->isEmpty()){
 		inputQueue->dequeue(e);
-		UNLOCK_INPUT_TUPLE(e.tuple);
+		if(e.tuple){
+			UNLOCK_INPUT_TUPLE(e.tuple);
+		}
 	}
 	//clear the synopsis
 	while(!winSynopsis->isEmpty()){
@@ -927,7 +929,16 @@ int RangeWindow::run_in_stop_preparing(TimeSlice timeSlice){
 	numElements = timeSlice;
 	unsigned int e = 0;
 
+	Tuple oldestTuple;
+	Timestamp oldestTupleTs;
+
 	for ( ; e < numElements ; e++) {
+
+		rc = winSynopsis -> getOldestTuple (oldestTuple, oldestTupleTs);
+		if(oldestTupleTs >=stopTupleTs){
+			deactivatePrecedingOps();
+			return 0;
+		}
 
 		// Get the next element
 		if (!inputQueue -> dequeue (inputElement)){
@@ -1119,11 +1130,6 @@ int RangeWindow::expireTuplesInStopPreparing(Timestamp expTs){
 
 		winSynopsis -> deleteOldestTuple();
 
-		rc = winSynopsis -> getOldestTuple (oldestTuple, oldestTupleTs);
-		if(oldestTupleTs >=stopTupleTs){
-			deactivatePrecedingOps();
-			return 0;
-		}
 	}
 
 	return 0;

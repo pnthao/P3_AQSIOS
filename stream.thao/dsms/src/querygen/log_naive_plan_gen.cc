@@ -17,6 +17,7 @@ using namespace std;
 #ifndef _DEBUG_
 #include "common/debug.h"
 #endif
+#include <stdio.h>
 
 using namespace Logical;
 
@@ -200,13 +201,16 @@ int LogPlanGen::genPlan_n (const Semantic::Query &query, Operator *&plan)
 	reset_expr_pool();
 	
 	if (query.kind == Semantic::SFW_QUERY) {
-		if ((rc = genSFWPlan_n (query, plan)) != 0)
+		if ((rc = genSFWPlan_n (query, plan)) != 0){
+			printf("error in genSFWPlan_n \n");
 			return rc;
+		}
 	}
 	
 	else {
-		if ((rc = genBinOpPlan_n (query, plan)) != 0)
+		if ((rc = genBinOpPlan_n (query, plan)) != 0){
 			return rc;
+		}
 	}
 	
 	return 0;
@@ -259,29 +263,38 @@ static int genSFWPlan_n (const Semantic::Query &query, Operator *&plan)
 	
 	
 	// Generate a plan that joins the FROM clause tables
-	if ((rc = joinTables_n (query, join)) != 0)
+	if ((rc = joinTables_n (query, join)) != 0){
+		printf("error in joinTables \n");
 		return rc;
+	}
 	
 	// Apply WHERE clause predicates over the join
-	if ((rc = applyPreds_n (query, join, select)) != 0)
+	if ((rc = applyPreds_n (query, join, select)) != 0){
+		printf("error in apply pred \n");
 		return rc;
+	}
 	
 	// Apply Aggregations & perform group by if necessary
-	if ((rc = applyAggr_n (query, select, aggr)) != 0)
+	if ((rc = applyAggr_n (query, select, aggr)) != 0){
+		printf("error in apply Aggr_n \n");
 		return rc;
-	
+	}
 	// Perform projections specified in SELECT clause
-	if ((rc = doProjs_n (query, aggr, project)) != 0)
+	if ((rc = doProjs_n (query, aggr, project)) != 0){
+		printf("error in doProjs \n");
 		return rc;
+	}
 	
 	// Apply Distinct operator if needed
-	if ((rc = applyDistinct_n (query, project, distinct)) != 0)
+	if ((rc = applyDistinct_n (query, project, distinct)) != 0){
 		return rc;
+	}
 	
 	// Apply R2S operators if present ...
-	if ((rc = applyR2SOps_n (query, distinct, r2s)) != 0)
+	if ((rc = applyR2SOps_n (query, distinct, r2s)) != 0){
+		printf("error in applyR2SOps_n \n");
 		return rc;
-	
+	}
 	// ... which is the final plan
 	plan = r2s;
 	
@@ -322,14 +335,17 @@ static int joinTables_n (const Semantic::Query &query,
 			tableId = query.refTables[varId];
 			
 			// ... get the source operator.
-			if ((rc = getSource_n (varId, tableId, tableSource)) != 0)
+			if ((rc = getSource_n (varId, tableId, tableSource)) != 0){
+				printf("error in getSource_n \n");
 				return rc;
-			
+			}
 			// This table is a stream: apply the specified window
 			if (l_tableMgr -> isStream (tableId)) {				
 				if ((rc = applyWindow_n (query.winSpec [t],
-										 tableSource, win)) != 0)
+										 tableSource, win)) != 0){
+					printf("error in applyWindow_n \n");
 					return rc;
+				}
 				tablePlan = win;
 			}
 			
@@ -340,7 +356,10 @@ static int joinTables_n (const Semantic::Query &query,
 			
 			// Input the plan for the table to the cross operator
 			cross = cross_add_input (cross, tablePlan);
-			if (!cross) return -1;
+			if (!cross){
+				printf("error in cross_add_input \n");
+				return -1;
+			}
 		}
 		
 		outputPlan = cross;		

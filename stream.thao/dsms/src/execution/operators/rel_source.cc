@@ -269,7 +269,6 @@ int RelSource::run (TimeSlice timeSlice)
 
 	// Heartbeat generation: Assert to the operator above that we won't
 	// produce any element with timestamp < lastInputTs
-	
 	if (!outputQueue -> isFull() && (lastInputTs > lastOutputTs)) {
 		outputQueue -> enqueue (Element::Heartbeat(lastInputTs));
 		lastOutputTs = lastInputTs;

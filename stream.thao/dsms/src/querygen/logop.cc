@@ -15,6 +15,7 @@ using namespace std;
 #ifndef _LOGOP_
 #include "querygen/logop.h"
 #endif
+#include<stdio.h>
 
 using namespace std;
 using namespace Logical;
@@ -385,13 +386,15 @@ Operator *Logical::cross_add_input(Operator *cross, Operator *input)
 	ASSERT(input);
 	
 	// Too many attributes in the output of cross?
-	if(cross -> numOutAttrs + input -> numOutAttrs > MAX_ATTRS)
+	if(cross -> numOutAttrs + input -> numOutAttrs > MAX_ATTRS){
+		printf("error: too many attributes: %d \n", cross->numOutAttrs + input ->numOutAttrs);
 		return 0;
-	
+	}
 	// too many inputs?
-	if(cross -> numInputs == MAX_INPUT_OPS)
+	if(cross -> numInputs == MAX_INPUT_OPS){
+		printf("error: too many inputs %d \n", cross->numInputs);
 		return 0;
-	
+	}
 	cross -> inputs [ cross -> numInputs++ ] = input;
 	
 	// Append the schema of the new input to the existing schema

@@ -541,7 +541,7 @@ void Communicator::handleMigrationAsSource(MigrationInfo &migrationInfo)
 	}
 	ss<<"E";
 
-
+	cout <<"start ts sent to destination: "<< ss.str() << endl;
 	sendMessage(sockfd_migrationDest,ss.str().c_str());
 
 	//wait for output ops of the migrating queries to finish and ack the dest
@@ -556,7 +556,6 @@ void Communicator::handleMigrationAsSource(MigrationInfo &migrationInfo)
 		set<int>::iterator it = outputIDs.begin();
 		outputID = *it;
 
-		cout<<outputID<<endl;
 		pthread_mutex_unlock(&mutex_outputIDs);
 
 		//find the query ID of the output op
@@ -572,9 +571,11 @@ void Communicator::handleMigrationAsSource(MigrationInfo &migrationInfo)
 		}
 		//remove the query id from the list of active query
 		nodeInfo->removeActiveQuery(queryID);
-		cout<<queryID<<endl;
+		//uncomment the code below if we want to syn at the output
+/*
 		int32_t queryID_to_send = htonl(queryID);
 		write(sockfd_migrationDest,&queryID_to_send,sizeof(queryID_to_send));
+*/
 
 		num_finished_queries++;
 
@@ -629,7 +630,7 @@ void Communicator::handleMigrationAsDest(MigrationInfo &migrationInfo){
 	//trim the msg header
 	len = strchr(msg,',') - msg;
 	msg = msg+ len +1;
-	//TODO: read the file pos of each source, tell the sources to seek and get back the timestamp of the first tuple
+	//read the file pos of each source, tell the sources to seek and get back the timestamp of the first tuple
 	//it can read
 	Physical::Operator* src;
 	int srcID;
@@ -677,6 +678,8 @@ void Communicator::handleMigrationAsDest(MigrationInfo &migrationInfo){
 		msg++;
 	}
 
+	//Panos says we don't need this syn at output, so just go ahead
+/*
 	//wait for finish ack from source node, each msg contains the query ID;
 	int count =0;
 	while (count < queryIDs.size()){
@@ -691,6 +694,11 @@ void Communicator::handleMigrationAsDest(MigrationInfo &migrationInfo){
 		mainScheduler->onSourceCompleted(queryID);
 
 		nodeInfo->addActiveQuery(queryID);
+
+	} */
+
+	for(set<int>::const_iterator it = queryIDs.begin(); it !=queryIDs.end();it++){
+		nodeInfo->addActiveQuery(*it);
 	}
 
 	//send the "finish" message to the source
@@ -704,7 +712,7 @@ int Communicator::sendMessage(int dest_sockfd, const char* msg){
 
 	int n = write(dest_sockfd,msg,strlen(msg)+1);
 	if (n<0){
-		printf("error sending message through the specify socket\n");
+		printf("error sending message through the specified socket\n");
 		return -1;
 	}
 	else

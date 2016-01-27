@@ -736,9 +736,10 @@ void Project::deactivate(){
 	//clear the input queue
 	Element e;
 	while (!inputQueue->isEmpty()) {
-			inputQueue->dequeue(e);
-		   UNLOCK_INPUT_TUPLE(e.tuple);
-
+		inputQueue->dequeue(e);
+		if(e.tuple){
+			UNLOCK_INPUT_TUPLE(e.tuple);
+		}
 	}
 	//clear the outsynopsis
 	if(outSynopsis)

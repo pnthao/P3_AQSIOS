@@ -218,7 +218,9 @@ void RelationSynopsisImpl::clearSyn(StorageAlloc *tupleStore){
 			while(t){
 				store->deleteTuple_r(t,stubId);
 				t = ((HashIndex*)indexes[i])->delFirst(h);
-				tupleStore->decrRef(t);
+				if(t){
+					tupleStore->decrRef(t);
+				}
 			}
 
 		}

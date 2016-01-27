@@ -312,9 +312,9 @@ int ServerImpl::registerQuery (const char *querySpec,
 	int rc;
 	
 	// This method can be called only in S_APP_SPEC state
-	if (state != S_APP_SPEC)
+	if (state != S_APP_SPEC){
 		return INVALID_USE_ERR;
-	
+	}
 	// Query String -> Parse Tree
 	parseTree = Parser::parseCommand(querySpec, querySpecLen);
 	if (!parseTree) {

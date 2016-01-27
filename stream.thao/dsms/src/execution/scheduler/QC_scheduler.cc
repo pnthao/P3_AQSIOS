@@ -131,7 +131,7 @@ QCScheduler::~QCScheduler () {  }
 
 
 int QCScheduler::addOperator (Operator *op) { 
-	assert (op->query_class_id >= 0 && op->query_class_id < n_query_classes);
+	assert ((op->query_class_id >= 0 && op->query_class_id < n_query_classes) || op->operator_type == SINK);
 	// add the operator to the scheduler that is
 	// responsible for its query class.
 	//fprintf(stdout,"\nOP added\n");

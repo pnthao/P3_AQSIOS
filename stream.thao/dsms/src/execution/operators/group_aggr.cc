@@ -354,12 +354,15 @@ int GroupAggr::processPlus (Element inputElement)
 		rc = outputSynopsis -> deleteTuple (oldAggrTuple);
 		if (rc != 0) return rc;		
 		
+		//ArmaDILoS by Thao Pham: if in start preparing, don't output, just build the synopsis
+		/*if(status == START_PREPARING){
+			continue;
+		}*/
 		// Send a plus element corr. to newAggrTuple, and a minus element
 		// corr. to oldAggrTuple.  We will never be blocked on the first
 		// enqueue, since we have ensured that the queue is non-full
 		// before coming here.
 		ASSERT (!outputQueue -> isFull());
-		
 		// Plus element:
 		plusElement.kind      = E_PLUS;
 		plusElement.tuple     = newAggrTuple;
@@ -387,6 +390,7 @@ int GroupAggr::processPlus (Element inputElement)
 		if ( !bStalled )
 		  n_tuples_outputted +=  1;
 		// end of part 6 of HR implementation by LAM
+
 	}
 	
 	// This is the first tuple belonging to this group
@@ -403,6 +407,10 @@ int GroupAggr::processPlus (Element inputElement)
 		if (rc != 0) return rc;
 		LOCK_OUTPUT_TUPLE (newAggrTuple);
 		
+		//ArmaDILoS by Thao Pham: if in start preparing, don't output, just build the synopsis
+		/*if(status == START_PREPARING){
+			continue;
+		}*/
 		// Send a plus element corresponding to this tuple. We will never
 		// be blocked, since we have ensured that the queue is non-full
 		// before coming here.
@@ -418,6 +426,7 @@ int GroupAggr::processPlus (Element inputElement)
 		n_tuples_outputted +=  1;
 		// end of part 7 of HR implementation by LAM
 		lastOutputTs = inputElement.timestamp;
+
 	}
 	
 	// Maintain the input synopsis if it exists
@@ -866,7 +875,9 @@ void GroupAggr::deactivate(){
 	Element e;
 	while(!inputQueue->isEmpty()){
 		inputQueue->dequeue(e);
-		UNLOCK_INPUT_TUPLE(e.tuple);
+		if(e.tuple){
+			UNLOCK_INPUT_TUPLE(e.tuple);
+		}
 	}
 	if(outputSynopsis)
 		outputSynopsis->clearSyn(outStore);

@@ -297,7 +297,11 @@ int Istream::run (TimeSlice timeSlice)
 	if ( e > 0 )
 	  local_cost += timeAfterLoop - timeBeforeLoop;
 	//end of part 4 of HR implementation by LAM
-	
+
+	//deactivate itself it there is no more incoming tuples to expect
+	if(inputQueue->isEmpty()&&inputs[0]->status==INACTIVE)
+		deactivate();
+
 	
 	return 0;
 }
@@ -874,4 +878,33 @@ int Istream::readyToExecute() {
 int Istream::run_with_shedder (TimeSlice timeSlice)
 {
 	return 0;
+}
+
+void Istream::deactivate(){
+
+	status = INACTIVE;
+
+	//clear stall if any
+	bStalled = false;
+
+	//clear the input queue
+	Element e;
+	while (!inputQueue->isEmpty()) {
+		inputQueue->dequeue(e);
+		if(e.tuple){
+			UNLOCK_INPUT_TUPLE(e.tuple);
+		}
+	}
+	//clear the outsynopsis
+	if(synopsis)
+		synopsis->clearSyn();
+
+	if(outputQueue->isEmpty()){
+		for(int i=0;i<numOutputs;i++){
+			outputs[i]->deactivate();
+		}
+	}
+	resetLocalStatisticsComputationCycle();
+	local_cost_per_tuple = 0;
+
 }

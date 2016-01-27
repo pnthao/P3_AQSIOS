@@ -701,6 +701,15 @@ int RowWindow::run_in_stop_preparing(TimeSlice timeSlice){
 
 	for ( ; e < numElements ; e++) {
 
+		//if the last window of ts< stopTupleTS is already produced
+		winSynopsis -> getOldestTuple (oldestTuple, oldestTupleTs);
+		if(oldestTupleTs >= stopTupleTs){
+			//time to stop
+			// deactivate all operators preceding it and itself
+			deactivatePrecedingOps();
+			break;
+		}
+
 		// We skip processing if we find the output queue full
 		if (outputQueue -> isFull())
 			break;
@@ -752,6 +761,7 @@ int RowWindow::run_in_stop_preparing(TimeSlice timeSlice){
 					oldestTupleTs);
 			if (rc != 0) return rc;
 
+
 			outElement.kind = E_MINUS;
 			outElement.tuple = oldestTuple;
 			outElement.timestamp = inElement.timestamp;
@@ -772,15 +782,6 @@ int RowWindow::run_in_stop_preparing(TimeSlice timeSlice){
 			// end of part 5 of HR implementation by LAM
 
 			// Note: no need to update lastOutputTs
-
-			//if the last window of ts< stopTupleTS is already produced
-			winSynopsis -> getOldestTuple (oldestTuple, oldestTupleTs);
-			if(oldestTupleTs >= stopTupleTs){
-				//time to stop
-				// deactivate all operators preceding it and itself
-				deactivatePrecedingOps();
-				break;
-			}
 		}
 
 		else {
@@ -830,7 +831,9 @@ void RowWindow::deactivate(){
 	Element e;
 	while(!inputQueue->isEmpty()){
 		inputQueue->dequeue(e);
-		UNLOCK_INPUT_TUPLE(e.tuple);
+		if(e.tuple){
+			UNLOCK_INPUT_TUPLE(e.tuple);
+		}
 	}
 	//clear the synopsis
 	while(!winSynopsis->isEmpty()){
