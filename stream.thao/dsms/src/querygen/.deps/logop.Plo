@@ -77,7 +77,11 @@ logop.lo: logop.cc /usr/include/c++/4.8/iostream \
  ../../../dsms/include/common/constants.h \
  ../../../dsms/include/common/types.h ../../../dsms/include/common/aggr.h \
  ../../../dsms/include/common/op.h \
- ../../../dsms/include/metadata/table_mgr.h
+ ../../../dsms/include/metadata/table_mgr.h /usr/include/libio.h \
+ /usr/include/_G_config.h /usr/include/i386-linux-gnu/bits/stdio_lim.h \
+ /usr/include/i386-linux-gnu/bits/sys_errlist.h \
+ /usr/include/i386-linux-gnu/bits/stdio.h \
+ /usr/include/i386-linux-gnu/bits/stdio2.h
 
 /usr/include/c++/4.8/iostream:
 
@@ -280,3 +284,15 @@ logop.lo: logop.cc /usr/include/c++/4.8/iostream \
 ../../../dsms/include/common/op.h:
 
 ../../../dsms/include/metadata/table_mgr.h:
+
+/usr/include/libio.h:
+
+/usr/include/_G_config.h:
+
+/usr/include/i386-linux-gnu/bits/stdio_lim.h:
+
+/usr/include/i386-linux-gnu/bits/sys_errlist.h:
+
+/usr/include/i386-linux-gnu/bits/stdio.h:
+
+/usr/include/i386-linux-gnu/bits/stdio2.h:

@@ -1,5 +1,5 @@
 cd /home/thao/PITT/workspace/p3/P3_AQSIOS/stream/bin
-./gen_client -l /home/thao/PITT/workspace/p3/P3_AQSIOS/log -c /home/thao/PITT/workspace/p3/P3_AQSIOS/config_singleclass -s /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/droplog/droplog  /home/thao/PITT/workspace/p3/P3_AQSIOS/scripts/script_simple_aggregate_1
+./gen_client -l /home/thao/PITT/workspace/p3/P3_AQSIOS/log -c /home/thao/PITT/workspace/p3/P3_AQSIOS/config_singleclass -s /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/droplog/droplog  /home/thao/PITT/workspace/p3/P3_AQSIOS/scripts/script_complex_1
 cd /home/thao/PITT/workspace/p3/P3_AQSIOS
 #./analysis.sh 1
 

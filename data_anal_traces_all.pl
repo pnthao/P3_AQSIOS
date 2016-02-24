@@ -35,7 +35,7 @@ if($fin ne '.' and $fin ne'..')
 				$sum = $sum + $2; 		
 			#}
 	 	} 
-		if($count == 20)
+		if($count == 10)
 		{
 			$avg = int($sum/$count) ;	   
 			print OUT "$last_ts     $avg\n";		

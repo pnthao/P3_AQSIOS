@@ -82,7 +82,12 @@ log_naive_plan_gen.lo: log_naive_plan_gen.cc \
  ../../../dsms/include/querygen/log_plan_gen.h \
  ../../../dsms/include/querygen/query.h \
  ../../../dsms/include/common/window.h \
- ../../../dsms/include/common/debug.h /usr/include/assert.h
+ ../../../dsms/include/common/debug.h /usr/include/assert.h \
+ /usr/include/libio.h /usr/include/_G_config.h \
+ /usr/include/i386-linux-gnu/bits/stdio_lim.h \
+ /usr/include/i386-linux-gnu/bits/sys_errlist.h \
+ /usr/include/i386-linux-gnu/bits/stdio.h \
+ /usr/include/i386-linux-gnu/bits/stdio2.h
 
 /usr/include/c++/4.8/iostream:
 
@@ -293,3 +298,15 @@ log_naive_plan_gen.lo: log_naive_plan_gen.cc \
 ../../../dsms/include/common/debug.h:
 
 /usr/include/assert.h:
+
+/usr/include/libio.h:
+
+/usr/include/_G_config.h:
+
+/usr/include/i386-linux-gnu/bits/stdio_lim.h:
+
+/usr/include/i386-linux-gnu/bits/sys_errlist.h:
+
+/usr/include/i386-linux-gnu/bits/stdio.h:
+
+/usr/include/i386-linux-gnu/bits/stdio2.h:

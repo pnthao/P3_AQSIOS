@@ -80,7 +80,9 @@ rel_store_impl.lo: rel_store_impl.cc \
  ../../../../dsms/include/execution/monitors/property_monitor.h \
  ../../../../dsms/include/execution/stores/rel_store.h \
  ../../../../dsms/include/execution/internals/tuple_iter.h \
- ../../../../dsms/include/execution/memory/memory_mgr.h
+ ../../../../dsms/include/execution/memory/memory_mgr.h \
+ /usr/include/c++/4.8/iostream /usr/include/c++/4.8/istream \
+ /usr/include/c++/4.8/bits/istream.tcc
 
 ../../../../dsms/include/common/debug.h:
 
@@ -281,3 +283,9 @@ rel_store_impl.lo: rel_store_impl.cc \
 ../../../../dsms/include/execution/internals/tuple_iter.h:
 
 ../../../../dsms/include/execution/memory/memory_mgr.h:
+
+/usr/include/c++/4.8/iostream:
+
+/usr/include/c++/4.8/istream:
+
+/usr/include/c++/4.8/bits/istream.tcc:

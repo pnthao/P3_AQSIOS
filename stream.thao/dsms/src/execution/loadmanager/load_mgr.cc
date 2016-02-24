@@ -777,8 +777,11 @@ void LoadManager::onStartTimestampSet(Physical::Operator* op, set<int>QueryIDs){
 		op->instOp->status = START_PREPARING; //group agg needs special treatment at the start
 	}*/
 	//else{
-		if(op->kind!=PO_STREAM_SOURCE)
+		if(op->kind == PO_GROUP_AGGR)
+			op->instOp->status = START_PREPARING; //group agg needs special treatment at the start
+		else if(op->kind!=PO_STREAM_SOURCE)
 			op->instOp->status = ACTIVE;
+
 		for(int o=0;o<op->numOutputs;o++){
 			onStartTimestampSet(op->outputs[o],QueryIDs);
 		}

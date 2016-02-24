@@ -113,6 +113,9 @@ namespace Execution {
 		
 		bool bStalled;
 		Element stalledElement;
+		//Thao Pham, ArmaDILoS: use to twist the processing of group-aggr when resuming query at target node
+		Element previousOldAgg;
+		Element previousNewAgg;
 
 		static const unsigned int INPUT_ROLE = 4;
 		static const unsigned int OLD_OUTPUT_ROLE = 3;

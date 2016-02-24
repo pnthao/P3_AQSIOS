@@ -83,7 +83,12 @@ query_mgr.lo: query_mgr.cc ../../../dsms/include/metadata/query_mgr.h \
  /usr/include/i386-linux-gnu/bits/sigset.h \
  /usr/include/i386-linux-gnu/bits/select2.h \
  /usr/include/i386-linux-gnu/sys/sysmacros.h /usr/include/alloca.h \
- /usr/include/i386-linux-gnu/bits/stdlib.h /usr/include/memory.h
+ /usr/include/i386-linux-gnu/bits/stdlib.h /usr/include/memory.h \
+ /usr/include/libio.h /usr/include/_G_config.h \
+ /usr/include/i386-linux-gnu/bits/stdio_lim.h \
+ /usr/include/i386-linux-gnu/bits/sys_errlist.h \
+ /usr/include/i386-linux-gnu/bits/stdio.h \
+ /usr/include/i386-linux-gnu/bits/stdio2.h
 
 ../../../dsms/include/metadata/query_mgr.h:
 
@@ -300,3 +305,15 @@ query_mgr.lo: query_mgr.cc ../../../dsms/include/metadata/query_mgr.h \
 /usr/include/i386-linux-gnu/bits/stdlib.h:
 
 /usr/include/memory.h:
+
+/usr/include/libio.h:
+
+/usr/include/_G_config.h:
+
+/usr/include/i386-linux-gnu/bits/stdio_lim.h:
+
+/usr/include/i386-linux-gnu/bits/sys_errlist.h:
+
+/usr/include/i386-linux-gnu/bits/stdio.h:
+
+/usr/include/i386-linux-gnu/bits/stdio2.h:

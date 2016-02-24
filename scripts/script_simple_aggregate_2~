@@ -6,7 +6,7 @@ table : register stream S1( l char(12), m integer, h integer);
 source : /home/thao/PITT/workspace/p3/P3_AQSIOS/inputs/humtemdata_realtcp
 
 qclass: 1
-query: select * from S1 [Rows 5];
+query: ISTREAM(select sum(m) from S1 [Rows 5]);
 dest: /home/thao/PITT/workspace/p3/P3_AQSIOS/outputs/detailed_data/expN_1query11_2.qo
 
 query: select * from P1 where m < 80;
